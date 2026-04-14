@@ -1,4 +1,4 @@
-"""APScheduler integration for daily check-ins and motivational messages."""
+"""APScheduler integration for daily check-ins and evening affirmations."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ async def _get_all_active_users() -> list[dict]:
 
 
 async def daily_checkin_job(bot) -> None:
-    """Run every hour; send check-in to users whose local time matches 9:00."""
+    """Run every hour; send morning affirmation at 9:00 local time."""
     users = await _get_all_active_users()
     utc_now = datetime.now(tz=timezone.utc)
 
@@ -43,7 +43,7 @@ async def daily_checkin_job(bot) -> None:
 
 
 async def evening_motivation_job(bot) -> None:
-    """Run every hour; send motivation to users whose local time matches 20:00."""
+    """Run every hour; send evening motivation at 20:00 local time."""
     users = await _get_all_active_users()
     utc_now = datetime.now(tz=timezone.utc)
 
@@ -54,7 +54,9 @@ async def evening_motivation_job(bot) -> None:
                 quote = get_random_motivation()
                 await bot.send_message(
                     u["user_id"],
-                    f"🌙 <b>Вечерняя мотивация</b>\n\n{quote}",
+                    f"🌙 <b>Вечернее напоминание</b>\n\n{quote}\n\n"
+                    "Ещё один день свободы позади. Спи спокойно — "
+                    "ты свободный человек. 🔓",
                     parse_mode="HTML",
                 )
             except Exception:

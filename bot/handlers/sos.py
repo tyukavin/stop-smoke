@@ -1,11 +1,9 @@
-"""SOS handler — the panic button for craving episodes.
+"""SOS handler — Allen Carr style craving management.
 
-Implements a multi-step craving management flow:
-1. User presses SOS -> show techniques
-2. User picks a technique -> show it
-3. User picks intensity -> log craving
-4. User reports trigger -> log and offer tips
-5. User reports result (resisted / relapsed)
+Three response types:
+1. Rational — explain what's happening (Little Monster dying)
+2. Switching — reframe the situation (freedom, not sacrifice)
+3. Celebrating — positive reinforcement (your body is healing)
 """
 
 from __future__ import annotations
@@ -28,15 +26,11 @@ from bot.services.achievement_service import (
 from bot.services.craving_service import get_craving_stats, log_craving
 from bot.services.user_service import get_user, reset_quit_date
 from bot.utils.coping import (
-    BREATHING_EXERCISE,
-    COLD_WATER,
-    DELAY_TECHNIQUE,
-    GROUNDING_5_4_3_2_1,
-    PHYSICAL_ACTIVITY,
-    SURFING_THE_URGE,
     TRIGGER_TIPS,
-    VISUALIZATION,
-    get_random_technique,
+    get_random_sos,
+    get_sos_celebrating,
+    get_sos_rational,
+    get_sos_switching,
 )
 
 router = Router()
@@ -49,39 +43,39 @@ class SOSStates(StatesGroup):
 
 
 SOS_TEXT = (
-    "🆘 <b>Приступ тяги? Не паникуйте!</b>\n\n"
-    "Тяга длится всего <b>3-5 минут</b>. Вы сильнее!\n\n"
-    "Выберите технику, которая поможет прямо сейчас, "
-    "или нажмите случайную:"
+    "🆘 <b>Маленькое Чудовище атакует!</b>\n\n"
+    "Спокойно. Это просто никотиновый паразит требует еды. "
+    "Он умирает — и ему это не нравится.\n\n"
+    "Это <b>не настоящее желание</b>. Это крик зависимости. "
+    "Он пройдёт через несколько минут.\n\n"
+    "Выбери, что тебе сейчас поможет:"
 )
 
 
-@router.message(F.text == "🆘 Тяга!")
+@router.message(F.text == "🆘 Чудовище атакует!")
 async def sos_button(message: Message, state: FSMContext) -> None:
     user = await get_user(message.from_user.id)
     if not user or not user.onboarding_complete:
-        await message.answer("Сначала пройдите настройку — /start")
+        await message.answer("Сначала пройди настройку — /start")
         return
     await state.set_state(SOSStates.picking_technique)
     await message.answer(SOS_TEXT, reply_markup=sos_actions_kb(), parse_mode="HTML")
 
 
-TECHNIQUE_MAP = {
-    "sos_breathing": BREATHING_EXERCISE,
-    "sos_grounding": GROUNDING_5_4_3_2_1,
-    "sos_delay": DELAY_TECHNIQUE,
-    "sos_physical": PHYSICAL_ACTIVITY,
-    "sos_water": COLD_WATER,
-    "sos_visualization": VISUALIZATION,
-    "sos_surfing": SURFING_THE_URGE,
-}
-
-
 @router.callback_query(F.data.startswith("sos_"), SOSStates.picking_technique)
 async def handle_technique(callback: CallbackQuery, state: FSMContext) -> None:
     key = callback.data
-    if key in TECHNIQUE_MAP:
-        await callback.message.answer(TECHNIQUE_MAP[key], parse_mode="HTML")
+
+    technique_map = {
+        "sos_rational": get_sos_rational,
+        "sos_switching": get_sos_switching,
+        "sos_celebrating": get_sos_celebrating,
+        "sos_random": get_random_sos,
+    }
+
+    if key in technique_map:
+        text = technique_map[key]()
+        await callback.message.answer(text, parse_mode="HTML")
         await callback.answer()
         return
 
@@ -89,8 +83,8 @@ async def handle_technique(callback: CallbackQuery, state: FSMContext) -> None:
         await state.update_data(resisted=True)
         await state.set_state(SOSStates.rating_intensity)
         await callback.message.edit_text(
-            "💪 <b>Отлично! Вы справились!</b>\n\n"
-            "Оцените силу тяги от 1 (слабая) до 10 (невыносимая):",
+            "🔓 <b>Чудовище побеждено! Ты свободен!</b>\n\n"
+            "Оцени силу атаки от 1 (слабая) до 10 (яростная):",
             parse_mode="HTML",
         )
         await callback.message.edit_reply_markup(reply_markup=craving_intensity_kb())
@@ -101,10 +95,10 @@ async def handle_technique(callback: CallbackQuery, state: FSMContext) -> None:
         await state.update_data(resisted=False)
         await state.set_state(SOSStates.rating_intensity)
         await callback.message.edit_text(
-            "🤗 <b>Ничего, это не конец!</b>\n\n"
-            "Срыв — это часть пути, а не провал. "
-            "Большинство людей бросают не с первой попытки.\n\n"
-            "Оцените силу тяги от 1 до 10:",
+            "💭 <b>Давай разберёмся, что произошло.</b>\n\n"
+            "Ты ещё раз убедился, что сигарета не принесла "
+            "никакого удовольствия — только чувство вины.\n\n"
+            "Оцени силу атаки от 1 до 10:",
             parse_mode="HTML",
         )
         await callback.message.edit_reply_markup(reply_markup=craving_intensity_kb())
@@ -120,7 +114,7 @@ async def handle_intensity(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(intensity=intensity)
     await state.set_state(SOSStates.picking_trigger)
     await callback.message.edit_text(
-        "🔍 <b>Что вызвало тягу?</b>",
+        "🔍 <b>Какой миф тебя обманул? Что спровоцировало атаку?</b>",
         parse_mode="HTML",
     )
     await callback.message.edit_reply_markup(reply_markup=trigger_kb())
@@ -149,16 +143,18 @@ async def handle_trigger(callback: CallbackQuery, state: FSMContext) -> None:
     if trigger in TRIGGER_TIPS:
         tip = TRIGGER_TIPS[trigger]
     else:
-        tip = get_random_technique()
+        tip = get_random_sos()
 
-    response = f"📝 <b>Записано!</b>\n\n"
+    response = ""
 
     if resisted:
         response += (
-            f"Вы победили тягу силой {intensity}/10. Так держать!\n\n"
-            f"📊 Всего приступов: {stats['total']} | "
+            f"🔓 <b>Чудовище повержено!</b>\n\n"
+            f"Атака силой {intensity}/10 — и ты победил. "
+            "Каждая такая победа делает Чудовище слабее.\n\n"
+            f"📊 Всего атак: {stats['total']} | "
             f"Побеждено: {stats['resisted']} | "
-            f"Средняя сила: {stats['avg_intensity']}\n"
+            f"Ср. сила: {stats['avg_intensity']}\n"
         )
         new_ach = await check_craving_achievements(callback.from_user.id)
         if new_ach:
@@ -167,15 +163,18 @@ async def handle_trigger(callback: CallbackQuery, state: FSMContext) -> None:
                 response += f"\n{format_achievement(code)}\n"
     else:
         response += (
-            "🤗 Срыв записан. Таймер начнётся заново.\n\n"
-            "<b>Помните:</b> средний курильщик бросает 7-10 раз, "
-            "прежде чем бросить навсегда. Каждая попытка делает вас сильнее!\n\n"
-            "Ваш таймер обновлён. Начинаем заново! 💪\n"
+            "💭 <b>Давай проанализируем.</b>\n\n"
+            "Ты закурил — и что? Получил удовольствие? Нет. "
+            "Только вернулось чувство вины и разочарования.\n\n"
+            "Это доказывает: <b>сигарета не давала тебе ничего</b>. "
+            "Давай разберём, какой миф тебя обманул, "
+            "и вернёмся в ряды счастливых некурящих.\n\n"
+            "🔄 Таймер обновлён. Ты снова свободен — прямо сейчас!\n"
         )
 
-    response += f"\n💡 <b>Совет:</b>\n{tip}"
+    response += f"\n💡 <b>Разбор триггера:</b>\n{tip}"
 
     await callback.message.edit_text(response, parse_mode="HTML")
-    await callback.message.answer("Продолжаем!", reply_markup=main_menu_kb())
+    await callback.message.answer("Продолжаем! 🔓", reply_markup=main_menu_kb())
     await state.clear()
     await callback.answer()

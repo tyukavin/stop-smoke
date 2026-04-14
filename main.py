@@ -1,4 +1,4 @@
-"""QuitSmoke Bot — Telegram bot to help quit smoking.
+"""QuitSmoke Bot — «Лёгкий способ» — Telegram bot based on Allen Carr method.
 
 Entry point: initializes the bot, database, scheduler, and starts polling.
 """
@@ -13,7 +13,17 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot.config import settings
-from bot.handlers import achievements, checkin, health, motivation, onboarding, progress, settings as settings_handler, sos
+from bot.handlers import (
+    achievements,
+    checkin,
+    health,
+    motivation,
+    myths,
+    onboarding,
+    progress,
+    settings as settings_handler,
+    sos,
+)
 from bot.models.database import init_db
 from bot.scheduler import setup_scheduler
 
@@ -42,6 +52,7 @@ async def main() -> None:
     dp.include_router(onboarding.router)
     dp.include_router(progress.router)
     dp.include_router(sos.router)
+    dp.include_router(myths.router)
     dp.include_router(health.router)
     dp.include_router(achievements.router)
     dp.include_router(motivation.router)

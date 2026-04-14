@@ -1,4 +1,4 @@
-"""Progress tracking handler — shows days, money, cigarettes avoided, life regained."""
+"""Progress tracking — «enjoying freedom» framing instead of «holding on»."""
 
 from __future__ import annotations
 
@@ -37,28 +37,41 @@ def _format_minutes(minutes: int) -> str:
     return f"{days} дн. {h} ч."
 
 
-@router.message(F.text == "📊 Мой прогресс")
+def _poison_grams(cigarettes: int) -> str:
+    """~12 mg tar per cigarette = 0.012g; rough estimate for display."""
+    grams = cigarettes * 0.012
+    if grams >= 1000:
+        return f"{grams / 1000:.1f} кг"
+    return f"{grams:.0f} г"
+
+
+@router.message(F.text == "🔓 Моя свобода")
 async def show_progress(message: Message) -> None:
     user = await get_user(message.from_user.id)
     if not user or not user.onboarding_complete:
-        await message.answer("Сначала пройдите настройку — /start")
+        await message.answer("Сначала пройди настройку — /start")
         return
 
     new_achievements = await check_and_unlock(user)
 
     text = (
-        f"📊 <b>Ваш прогресс</b>\n\n"
-        f"📅 Без сигарет: <b>{_format_duration(user.smoke_free_days)}</b>\n"
-        f"🚬 Не выкурено: <b>{user.cigarettes_avoided} сигарет</b>\n"
-        f"💰 Сэкономлено: <b>{user.money_saved:.0f}₽</b>\n"
-        f"❤️ Возвращено жизни: <b>{_format_minutes(user.life_regained_minutes)}</b>\n"
+        f"🔓 <b>Ты наслаждаешься свободой уже {_format_duration(user.smoke_free_days)}!</b>\n\n"
+        f"🚫 Не впустил в себя: <b>{_poison_grams(user.cigarettes_avoided)} смолы</b> "
+        f"({user.cigarettes_avoided} сигарет)\n"
+        f"💰 Не отдал табачным компаниям: <b>{user.money_saved:.0f}₽</b>\n"
+        f"❤️ Вернул себе жизни: <b>{_format_minutes(user.life_regained_minutes)}</b>\n"
     )
 
     if user.motivation:
-        text += f"\n💭 Ваша причина: <i>{user.motivation}</i>\n"
+        text += f"\n💭 Твоя причина: <i>«{user.motivation}»</i>\n"
+
+    text += (
+        "\nПомни: ты ничего не потерял. Ты только приобрёл. "
+        "С каждым днём Маленькое Чудовище слабеет. 💪"
+    )
 
     if new_achievements:
-        text += "\n🌟 <b>Новые достижения!</b>\n"
+        text += "\n\n🌟 <b>Новые достижения!</b>\n"
         for code in new_achievements:
             text += f"\n{format_achievement(code)}\n"
 
@@ -69,7 +82,7 @@ async def show_progress(message: Message) -> None:
 async def show_economy(message: Message) -> None:
     user = await get_user(message.from_user.id)
     if not user or not user.onboarding_complete:
-        await message.answer("Сначала пройдите настройку — /start")
+        await message.answer("Сначала пройди настройку — /start")
         return
 
     price_per_cig = user.price_per_pack / user.cigarettes_in_pack
@@ -78,27 +91,32 @@ async def show_economy(message: Message) -> None:
     yearly_cost = daily_cost * 365
 
     text = (
-        f"💰 <b>Финансовая свобода</b>\n\n"
-        f"Вы тратили на сигареты:\n"
+        f"💰 <b>Деньги, которые забирали табачные компании</b>\n\n"
+        f"Ты отдавал им:\n"
         f"  • В день: <b>{daily_cost:.0f}₽</b>\n"
         f"  • В месяц: <b>{monthly_cost:.0f}₽</b>\n"
         f"  • В год: <b>{yearly_cost:.0f}₽</b>\n\n"
-        f"✅ <b>Уже сэкономлено: {user.money_saved:.0f}₽</b>\n\n"
-        f"💡 На эти деньги можно:\n"
+        f"🔓 <b>Ты уже оставил себе: {user.money_saved:.0f}₽</b>\n\n"
+        f"💡 Деньги, которые теперь <b>твои</b>:\n"
     )
 
     saved = user.money_saved
     if saved >= 50000:
-        text += "  • Слетать в отпуск! ✈️\n"
+        text += "  • Отпуск, который ты заслужил ✈️\n"
     if saved >= 10000:
-        text += "  • Купить крутые кроссовки 👟\n"
+        text += "  • Крутые кроссовки для здоровых лёгких 👟\n"
     if saved >= 5000:
-        text += "  • Сходить в хороший ресторан 🍽️\n"
+        text += "  • Отличный ресторан 🍽️\n"
     if saved >= 1000:
-        text += "  • Купить книгу или подписку 📚\n"
+        text += "  • Хорошая книга или подписка 📚\n"
     if saved >= 250:
-        text += "  • Выпить отличный кофе ☕\n"
+        text += "  • Настоящий вкусный кофе ☕\n"
     if saved < 250:
-        text += "  • Совсем скоро хватит на хороший кофе! ☕\n"
+        text += "  • Скоро хватит на хороший кофе! ☕\n"
+
+    text += (
+        "\nТабачные компании больше на тебе не зарабатывают. "
+        "Приятное чувство, правда? 😏"
+    )
 
     await message.answer(text, reply_markup=main_menu_kb(), parse_mode="HTML")

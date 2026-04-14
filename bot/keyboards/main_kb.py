@@ -9,10 +9,10 @@ from aiogram.types import (
 def main_menu_kb() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📊 Мой прогресс"), KeyboardButton(text="🏥 Здоровье")],
-            [KeyboardButton(text="🆘 Тяга!"), KeyboardButton(text="🏆 Достижения")],
-            [KeyboardButton(text="💰 Экономия"), KeyboardButton(text="🙏 Мотивация")],
-            [KeyboardButton(text="⚙️ Настройки")],
+            [KeyboardButton(text="🔓 Моя свобода"), KeyboardButton(text="🏥 Здоровье")],
+            [KeyboardButton(text="🆘 Чудовище атакует!"), KeyboardButton(text="🏆 Достижения")],
+            [KeyboardButton(text="💰 Экономия"), KeyboardButton(text="🎭 Мифы")],
+            [KeyboardButton(text="💡 Мотивация"), KeyboardButton(text="⚙️ Настройки")],
         ],
         resize_keyboard=True,
     )
@@ -21,16 +21,13 @@ def main_menu_kb() -> ReplyKeyboardMarkup:
 def sos_actions_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🌬️ Дыхательная техника", callback_data="sos_breathing")],
-            [InlineKeyboardButton(text="🧘 Заземление 5-4-3-2-1", callback_data="sos_grounding")],
-            [InlineKeyboardButton(text="⏱ Правило 10 минут", callback_data="sos_delay")],
-            [InlineKeyboardButton(text="🏃 Физическая активность", callback_data="sos_physical")],
-            [InlineKeyboardButton(text="🧊 Холодная вода", callback_data="sos_water")],
-            [InlineKeyboardButton(text="🌅 Визуализация", callback_data="sos_visualization")],
-            [InlineKeyboardButton(text="🌊 Сёрфинг по волне", callback_data="sos_surfing")],
+            [InlineKeyboardButton(text="🧠 Рациональный ответ", callback_data="sos_rational")],
+            [InlineKeyboardButton(text="🔑 Переключение фокуса", callback_data="sos_switching")],
+            [InlineKeyboardButton(text="🎉 Поздравь меня!", callback_data="sos_celebrating")],
+            [InlineKeyboardButton(text="🎲 Случайная поддержка", callback_data="sos_random")],
             [
-                InlineKeyboardButton(text="✅ Справился!", callback_data="sos_resisted"),
-                InlineKeyboardButton(text="❌ Сорвался", callback_data="sos_relapsed"),
+                InlineKeyboardButton(text="✅ Чудовище побеждено!", callback_data="sos_resisted"),
+                InlineKeyboardButton(text="😔 Закурил(а)", callback_data="sos_relapsed"),
             ],
         ]
     )
@@ -51,11 +48,11 @@ def trigger_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="😮‍💨 Стресс", callback_data="trigger_stress"),
-                InlineKeyboardButton(text="🧐 Скука", callback_data="trigger_boredom"),
+                InlineKeyboardButton(text="😤 Стресс", callback_data="trigger_stress"),
+                InlineKeyboardButton(text="🥱 Скука", callback_data="trigger_boredom"),
             ],
             [
-                InlineKeyboardButton(text="🧑‍🤝‍🧑 Компания", callback_data="trigger_social"),
+                InlineKeyboardButton(text="👥 Компания", callback_data="trigger_social"),
                 InlineKeyboardButton(text="☕ Кофе/еда", callback_data="trigger_coffee"),
             ],
             [
@@ -67,15 +64,39 @@ def trigger_kb() -> InlineKeyboardMarkup:
     )
 
 
+def myth_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="😤 Стресс", callback_data="myth_stress"),
+                InlineKeyboardButton(text="🥱 Скука", callback_data="myth_boredom"),
+            ],
+            [
+                InlineKeyboardButton(text="🎯 Концентрация", callback_data="myth_concentration"),
+                InlineKeyboardButton(text="⚖️ Вес", callback_data="myth_weight"),
+            ],
+            [
+                InlineKeyboardButton(text="👥 Компания", callback_data="myth_social"),
+                InlineKeyboardButton(text="😌 Удовольствие", callback_data="myth_pleasure"),
+            ],
+            [
+                InlineKeyboardButton(text="☝️ Одна сигарета", callback_data="myth_one_cig"),
+                InlineKeyboardButton(text="🔄 Привычка", callback_data="myth_habit"),
+            ],
+            [InlineKeyboardButton(text="🎲 Случайный миф", callback_data="myth_random")],
+        ]
+    )
+
+
 def mood_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="😞 1", callback_data="mood_1"),
+                InlineKeyboardButton(text="😣 1", callback_data="mood_1"),
                 InlineKeyboardButton(text="😕 2", callback_data="mood_2"),
-                InlineKeyboardButton(text="😐 3", callback_data="mood_3"),
-                InlineKeyboardButton(text="🙂 4", callback_data="mood_4"),
-                InlineKeyboardButton(text="😄 5", callback_data="mood_5"),
+                InlineKeyboardButton(text="🙂 3", callback_data="mood_3"),
+                InlineKeyboardButton(text="😄 4", callback_data="mood_4"),
+                InlineKeyboardButton(text="🤩 5", callback_data="mood_5"),
             ]
         ]
     )
@@ -88,7 +109,7 @@ def settings_kb() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="💵 Цена пачки", callback_data="set_price")],
             [InlineKeyboardButton(text="🌐 Часовой пояс", callback_data="set_tz")],
             [InlineKeyboardButton(text="📝 Моя мотивация", callback_data="set_motivation")],
-            [InlineKeyboardButton(text="🔄 Сбросить дату", callback_data="set_reset")],
+            [InlineKeyboardButton(text="🔄 Начать заново", callback_data="set_reset")],
         ]
     )
 
@@ -97,7 +118,7 @@ def onboarding_confirm_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Готово, начинаем!", callback_data="onboard_confirm"),
+                InlineKeyboardButton(text="🔓 Я свободен! Начинаем!", callback_data="onboard_confirm"),
                 InlineKeyboardButton(text="✏️ Изменить", callback_data="onboard_restart"),
             ]
         ]
@@ -108,8 +129,8 @@ def checkin_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Да, не курил(a)!", callback_data="checkin_yes"),
-                InlineKeyboardButton(text="❌ Сорвался/ась", callback_data="checkin_no"),
+                InlineKeyboardButton(text="🔓 Свободен/на!", callback_data="checkin_yes"),
+                InlineKeyboardButton(text="😔 Закурил(а)", callback_data="checkin_no"),
             ]
         ]
     )

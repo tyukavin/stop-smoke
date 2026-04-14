@@ -1,4 +1,8 @@
-"""Daily check-in handler and scheduler integration."""
+"""Daily check-in — Allen Carr style.
+
+Morning messages are affirmations, not questions.
+Relapse handling is non-judgmental with myth analysis.
+"""
 
 from __future__ import annotations
 
@@ -18,15 +22,41 @@ router = Router()
 
 
 async def send_daily_checkin(bot, user_id: int) -> None:
-    """Called by the scheduler to send a daily check-in message."""
+    """Called by the scheduler — affirmation, not question."""
     user = await get_user(user_id)
     if not user or not user.onboarding_complete:
         return
 
+    days = user.smoke_free_days + 1
+
+    if days <= 3:
+        body = (
+            "Маленькое Чудовище ещё дёргается, но с каждым часом оно слабеет. "
+            "Ты не «терпишь» — ты просто живёшь без яда."
+        )
+    elif days <= 7:
+        body = (
+            "Никотин уже покинул твой организм! "
+            "Чудовище мертво. Осталось только избавиться от привычных мыслей — "
+            "и это легко, когда ты понимаешь, что ничего не потерял."
+        )
+    elif days <= 30:
+        body = (
+            "Ты уже привыкаешь к свободе. Заметь: всё больше ситуаций, "
+            "когда ты даже не вспоминаешь о сигаретах. "
+            "Так и должно быть — ты возвращаешься к норме."
+        )
+    else:
+        body = (
+            "Ты — свободный человек. Сигареты больше не управляют тобой. "
+            "Наслаждайся этим днём — он полностью твой."
+        )
+
     text = (
-        f"🌞 <b>Доброе утро!</b>\n\n"
-        f"📅 День <b>{user.smoke_free_days + 1}</b> без сигарет.\n\n"
-        f"Вы не курили вчера?"
+        f"🌅 <b>Доброе утро, свободный человек!</b>\n\n"
+        f"День <b>{days}</b> твоей свободы. "
+        f"Как здорово проснуться и не нуждаться в яде!\n\n"
+        f"{body}"
     )
     await bot.send_message(user_id, text, reply_markup=checkin_kb(), parse_mode="HTML")
 
@@ -43,8 +73,10 @@ async def checkin_yes(callback: CallbackQuery) -> None:
     new_ach += await check_checkin_achievements(user_id)
 
     text = (
-        "✅ <b>Отлично! Ещё один день победы!</b>\n\n"
-        "Как ваше настроение сегодня?"
+        "🔓 <b>Конечно! Ты свободен!</b>\n\n"
+        "Это не подвиг — это нормальная жизнь без яда. "
+        "Именно так живут миллионы счастливых некурящих.\n\n"
+        "Как настроение сегодня?"
     )
 
     if new_ach:
@@ -54,7 +86,7 @@ async def checkin_yes(callback: CallbackQuery) -> None:
 
     await callback.message.edit_text(text, parse_mode="HTML")
     await callback.message.answer(
-        "Оцените настроение от 1 😞 до 5 😄:",
+        "Оцени своё самочувствие:",
         reply_markup=mood_kb(),
     )
     await callback.answer()
@@ -67,13 +99,18 @@ async def checkin_no(callback: CallbackQuery) -> None:
     await reset_quit_date(user_id)
 
     text = (
-        "🤗 <b>Ничего страшного!</b>\n\n"
-        "Срыв — это не провал, а часть пути. "
-        "Средний курильщик делает <b>7-10 попыток</b> прежде чем бросить навсегда.\n\n"
-        "Ваш таймер начинается заново. Каждая попытка — это опыт и сила! 💪"
+        "💭 <b>Давай поговорим об этом.</b>\n\n"
+        "Ты закурил — и что получил? Удовольствие? Нет. "
+        "Только чувство вины и разочарования.\n\n"
+        "Это <b>доказывает</b>, что сигарета не даёт ничего ценного. "
+        "Ты ещё раз убедился в этом на собственном опыте.\n\n"
+        "Давай проанализируем, какой миф тебя обманул. "
+        "Нажми 🎭 <b>Мифы</b> — и мы разберём эту ловушку.\n\n"
+        "🔄 Таймер обновлён. Ты снова в рядах свободных людей — "
+        "прямо сейчас! 🔓"
     )
     await callback.message.edit_text(text, parse_mode="HTML")
-    await callback.message.answer("Продолжаем!", reply_markup=main_menu_kb())
+    await callback.message.answer("Добро пожаловать обратно! 🔓", reply_markup=main_menu_kb())
     await callback.answer()
 
 
@@ -83,14 +120,31 @@ async def handle_mood(callback: CallbackQuery) -> None:
     await log_mood(callback.from_user.id, mood)
 
     moods_text = {
-        1: "Тяжело бывает. Помните — это временно! 💪",
-        2: "День получше — уже прогресс! 🙂",
-        3: "Стабильность — тоже победа! 👍",
-        4: "Хорошее настроение — заслуженная награда! 🌟",
-        5: "Замечательно! Вы на верном пути! 🎉",
+        1: (
+            "Тяжеловато? Это нормально — тело перестраивается. "
+            "Помни: это не жертва. Это выздоровление. "
+            "Тебе становится лучше, даже если пока не чувствуется. 💪"
+        ),
+        2: (
+            "Небольшой дискомфорт — это Чудовище корчится от голода. "
+            "Радуйся! Оно умирает. 🙂"
+        ),
+        3: (
+            "Стабильно — а это уже победа. "
+            "Свобода становится нормой. Так и должно быть. 👍"
+        ),
+        4: (
+            "Отлично! Чувствуешь разницу? "
+            "Без яда жизнь ярче. И дальше будет только лучше! 🌟"
+        ),
+        5: (
+            "Прекрасно! Это и есть свобода. "
+            "Ты чувствуешь то, что некурящие чувствуют каждый день. "
+            "Теперь и ты! 🎉"
+        ),
     }
 
-    text = f"📝 Настроение записано: {'⭐' * mood}\n\n{moods_text.get(mood, '')}"
+    text = f"📝 Настроение: {'⭐' * mood}\n\n{moods_text.get(mood, '')}"
     await callback.message.edit_text(text, parse_mode="HTML")
-    await callback.message.answer("Отличного дня! ❤️", reply_markup=main_menu_kb())
+    await callback.message.answer("Отличного дня! 🔓", reply_markup=main_menu_kb())
     await callback.answer()

@@ -1,4 +1,7 @@
-"""Onboarding flow: collects user profile data step by step using FSM."""
+"""Onboarding flow — Allen Carr «Easy Way» style.
+
+The tone is about liberation, not sacrifice. We don't «quit» — we «escape».
+"""
 
 from __future__ import annotations
 
@@ -25,21 +28,29 @@ class OnboardingStates(StatesGroup):
 
 
 WELCOME_TEXT = (
-    "🙌 <b>Добро пожаловать в QuitSmoke Bot!</b>\n\n"
-    "Я помогу вам бросить курить, используя проверенные методики:\n\n"
-    "📊 <b>Трекинг прогресса</b> — дни, деньги, здоровье\n"
-    "🆘 <b>SOS-кнопка</b> — мгновенная помощь при тяге\n"
-    "🏆 <b>Достижения</b> — геймификация пути\n"
-    "🏥 <b>Шкала здоровья</b> — как тело восстанавливается\n"
-    "🙏 <b>Мотивация</b> — ежедневная поддержка\n\n"
-    "Давайте настроим ваш профиль!\n\n"
-    "🚬 <b>Сколько сигарет в день вы курите (курили)?</b>\n"
-    "Напишите число:"
+    "🔓 <b>Добро пожаловать в «Лёгкий способ»!</b>\n\n"
+    "Ты здесь не для того, чтобы «бросить» курить. "
+    "Ты здесь, чтобы <b>освободиться</b> от ловушки, "
+    "в которую попал.\n\n"
+    "Хорошая новость: тебе не нужна сила воли. "
+    "Нужно только <b>понять</b>, как работает зависимость — "
+    "и она рассыпется.\n\n"
+    "Я — твой коуч по методике Аллена Карра. "
+    "Вот что я умею:\n\n"
+    "🔓 <b>Твоя свобода</b> — сколько дней, денег, жизни ты вернул\n"
+    "🆘 <b>SOS-помощь</b> — когда Чудовище атакует\n"
+    "🎭 <b>Убийца мифов</b> — разрушаем иллюзии о курении\n"
+    "🏆 <b>Достижения</b> — празднуем каждый шаг\n"
+    "🏥 <b>Здоровье</b> — как тело восстанавливается\n\n"
+    "Для начала расскажи немного о себе.\n\n"
+    "🚬 <b>Сколько сигарет в день ты куришь (курил)?</b>\n"
+    "Напиши число:"
 )
 
 RETURNING_TEXT = (
-    "👋 <b>С возвращением!</b>\n\n"
-    "Рад снова вас видеть. Используйте меню ниже."
+    "🔓 <b>С возвращением, свободный человек!</b>\n\n"
+    "Используй меню ниже. Помни: ты не «держишься» — "
+    "ты просто живёшь нормальную жизнь."
 )
 
 
@@ -63,15 +74,16 @@ async def process_cpd(message: Message, state: FSMContext) -> None:
         if cpd < 1 or cpd > 200:
             raise ValueError
     except (ValueError, AttributeError):
-        await message.answer("❌ Введите число от 1 до 200:")
+        await message.answer("Введи число от 1 до 200:")
         return
 
     await update_field(message.from_user.id, "cigarettes_per_day", cpd)
     await state.update_data(cpd=cpd)
     await state.set_state(OnboardingStates.price_per_pack)
     await message.answer(
-        "💵 <b>Сколько стоит одна пачка сигарет (в рублях)?</b>\n"
-        "Напишите число:",
+        "💵 <b>Сколько стоит одна пачка (в рублях)?</b>\n\n"
+        "Скоро ты увидишь, сколько денег табачные компании "
+        "забирали у тебя каждый день.",
         parse_mode="HTML",
     )
 
@@ -83,14 +95,15 @@ async def process_price(message: Message, state: FSMContext) -> None:
         if price <= 0 or price > 10000:
             raise ValueError
     except (ValueError, AttributeError):
-        await message.answer("❌ Введите цену от 1 до 10000:")
+        await message.answer("Введи цену от 1 до 10000:")
         return
 
     await update_field(message.from_user.id, "price_per_pack", price)
     await state.update_data(price=price)
     await state.set_state(OnboardingStates.years_smoking)
     await message.answer(
-        "📅 <b>Сколько лет вы курите?</b>\nНапишите число:",
+        "📅 <b>Сколько лет ты в ловушке?</b>\n"
+        "Напиши число лет курения:",
         parse_mode="HTML",
     )
 
@@ -102,18 +115,17 @@ async def process_years(message: Message, state: FSMContext) -> None:
         if years < 0 or years > 80:
             raise ValueError
     except (ValueError, AttributeError):
-        await message.answer("❌ Введите число от 0 до 80:")
+        await message.answer("Введи число от 0 до 80:")
         return
 
     await update_field(message.from_user.id, "years_smoking", years)
     await state.update_data(years=years)
     await state.set_state(OnboardingStates.motivation)
     await message.answer(
-        "💭 <b>Почему вы хотите бросить курить?</b>\n\n"
-        "Напишите свою главную причину. Мы будем напоминать вам о ней "
-        "в трудные моменты.\n\n"
-        "<i>Например: «Ради здоровья детей», «Хочу пробежать марафон», "
-        "«Устал от зависимости»</i>",
+        "💭 <b>Зачем ты хочешь стать свободным?</b>\n\n"
+        "Напиши свою главную причину. Она будет твоим якорем.\n\n"
+        "<i>Например: «Хочу дышать свободно», «Ради детей», "
+        "«Не хочу быть рабом табака»</i>",
         parse_mode="HTML",
     )
 
@@ -122,20 +134,30 @@ async def process_years(message: Message, state: FSMContext) -> None:
 async def process_motivation(message: Message, state: FSMContext) -> None:
     motivation = (message.text or "").strip()[:500]
     if not motivation:
-        await message.answer("❌ Пожалуйста, напишите хотя бы пару слов:")
+        await message.answer("Напиши хотя бы пару слов:")
         return
 
     await update_field(message.from_user.id, "motivation", motivation)
     data = await state.get_data()
     await state.set_state(OnboardingStates.confirm)
 
+    cpd = data.get("cpd", 20)
+    price = data.get("price", 250)
+    years = data.get("years", 5)
+    total_cigs = cpd * 365 * years
+    total_money = (price / 20) * total_cigs
+
     summary = (
-        "📋 <b>Ваш профиль:</b>\n\n"
-        f"🚬 Сигарет в день: <b>{data.get('cpd', '?')}</b>\n"
-        f"💵 Цена пачки: <b>{data.get('price', '?')}₽</b>\n"
-        f"📅 Стаж курения: <b>{data.get('years', '?')} лет</b>\n"
-        f"💭 Мотивация: <i>{motivation}</i>\n\n"
-        "Всё верно?"
+        "📋 <b>Итак, вот картина:</b>\n\n"
+        f"🚬 Ты курил: <b>{cpd}</b> сигарет в день\n"
+        f"💵 По цене: <b>{price}₽</b> за пачку\n"
+        f"📅 В течение: <b>{years} лет</b>\n"
+        f"💭 Твоя причина: <i>{motivation}</i>\n\n"
+        f"За это время ты отдал табачным компаниям примерно "
+        f"<b>{total_money:,.0f}₽</b> и выкурил <b>{total_cigs:,}</b> сигарет.\n\n"
+        "Ни одна из этих сигарет не принесла тебе реального удовольствия. "
+        "Каждая лишь создавала потребность в следующей.\n\n"
+        "<b>Готов стать свободным?</b>"
     )
     await message.answer(summary, reply_markup=onboarding_confirm_kb(), parse_mode="HTML")
 
@@ -149,17 +171,21 @@ async def confirm_onboarding(callback: CallbackQuery, state: FSMContext) -> None
     await state.clear()
 
     text = (
-        "🎉 <b>Поздравляем! Ваш путь к свободе начинается ПРЯМО СЕЙЧАС!</b>\n\n"
-        "⏰ Отсчёт пошёл. Каждая секунда без сигареты — ваша победа.\n\n"
-        "Используйте кнопки меню:\n"
-        "• 📊 <b>Мой прогресс</b> — дни, деньги, сигареты\n"
-        "• 🆘 <b>Тяга!</b> — мгновенная помощь при приступе\n"
-        "• 🏥 <b>Здоровье</b> — шкала восстановления\n"
-        "• 🏆 <b>Достижения</b> — ваши награды\n\n"
-        "💪 Вы справитесь!"
+        "🎉 <b>Поздравляю! Ты только что выбрал свободу!</b>\n\n"
+        "Ты не «бросаешь» курить — ты <b>освобождаешься</b>. "
+        "И ничего не теряешь. Вообще ничего.\n\n"
+        "Маленькое Чудовище внутри тебя скоро умрёт от голода. "
+        "Всё, что нужно — не кормить его. Это не требует силы воли. "
+        "Это требует только понимания.\n\n"
+        "Используй меню:\n"
+        "• 🔓 <b>Моя свобода</b> — твой прогресс\n"
+        "• 🆘 <b>Чудовище атакует!</b> — мгновенная помощь\n"
+        "• 🎭 <b>Мифы</b> — разрушаем иллюзии\n"
+        "• 🏥 <b>Здоровье</b> — восстановление организма\n\n"
+        "🔓 <b>Добро пожаловать в ряды счастливых некурящих!</b>"
     )
     await callback.message.edit_text(text, parse_mode="HTML")
-    await callback.message.answer("Выберите действие:", reply_markup=main_menu_kb())
+    await callback.message.answer("Выбери действие:", reply_markup=main_menu_kb())
     await callback.answer()
 
 
@@ -167,7 +193,7 @@ async def confirm_onboarding(callback: CallbackQuery, state: FSMContext) -> None
 async def restart_onboarding(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(OnboardingStates.cigarettes_per_day)
     await callback.message.edit_text(
-        "🚬 <b>Сколько сигарет в день вы курите?</b>\nНапишите число:",
+        "🚬 <b>Сколько сигарет в день ты куришь?</b>\nНапиши число:",
         parse_mode="HTML",
     )
     await callback.answer()

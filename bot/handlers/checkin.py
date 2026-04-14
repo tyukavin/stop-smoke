@@ -24,8 +24,8 @@ async def send_daily_checkin(bot, user_id: int) -> None:
         return
 
     text = (
-        f"\ud83c\udf1e <b>Доброе утро!</b>\n\n"
-        f"\ud83d\udcc5 День <b>{user.smoke_free_days + 1}</b> без сигарет.\n\n"
+        f"🌞 <b>Доброе утро!</b>\n\n"
+        f"📅 День <b>{user.smoke_free_days + 1}</b> без сигарет.\n\n"
         f"Вы не курили вчера?"
     )
     await bot.send_message(user_id, text, reply_markup=checkin_kb(), parse_mode="HTML")
@@ -43,18 +43,18 @@ async def checkin_yes(callback: CallbackQuery) -> None:
     new_ach += await check_checkin_achievements(user_id)
 
     text = (
-        "\u2705 <b>Отлично! Ещё один день победы!</b>\n\n"
+        "✅ <b>Отлично! Ещё один день победы!</b>\n\n"
         "Как ваше настроение сегодня?"
     )
 
     if new_ach:
-        text += "\n\n\ud83c\udf1f <b>Новые достижения!</b>\n"
+        text += "\n\n🌟 <b>Новые достижения!</b>\n"
         for code in new_ach:
             text += f"\n{format_achievement(code)}\n"
 
     await callback.message.edit_text(text, parse_mode="HTML")
     await callback.message.answer(
-        "Оцените настроение от 1 \ud83d\ude1e до 5 \ud83d\ude04:",
+        "Оцените настроение от 1 😞 до 5 😄:",
         reply_markup=mood_kb(),
     )
     await callback.answer()
@@ -67,10 +67,10 @@ async def checkin_no(callback: CallbackQuery) -> None:
     await reset_quit_date(user_id)
 
     text = (
-        "\ud83e\udd17 <b>Ничего страшного!</b>\n\n"
+        "🤗 <b>Ничего страшного!</b>\n\n"
         "Срыв — это не провал, а часть пути. "
         "Средний курильщик делает <b>7-10 попыток</b> прежде чем бросить навсегда.\n\n"
-        "Ваш таймер начинается заново. Каждая попытка — это опыт и сила! \ud83d\udcaa"
+        "Ваш таймер начинается заново. Каждая попытка — это опыт и сила! 💪"
     )
     await callback.message.edit_text(text, parse_mode="HTML")
     await callback.message.answer("Продолжаем!", reply_markup=main_menu_kb())
@@ -83,14 +83,14 @@ async def handle_mood(callback: CallbackQuery) -> None:
     await log_mood(callback.from_user.id, mood)
 
     moods_text = {
-        1: "Тяжело бывает. Помните — это временно! \ud83d\udcaa",
-        2: "День получше — уже прогресс! \ud83d\ude42",
-        3: "Стабильность — тоже победа! \ud83d\udc4d",
-        4: "Хорошее настроение — заслуженная награда! \ud83c\udf1f",
-        5: "Замечательно! Вы на верном пути! \ud83c\udf89",
+        1: "Тяжело бывает. Помните — это временно! 💪",
+        2: "День получше — уже прогресс! 🙂",
+        3: "Стабильность — тоже победа! 👍",
+        4: "Хорошее настроение — заслуженная награда! 🌟",
+        5: "Замечательно! Вы на верном пути! 🎉",
     }
 
-    text = f"\ud83d\udcdd Настроение записано: {'⭐' * mood}\n\n{moods_text.get(mood, '')}"
+    text = f"📝 Настроение записано: {'⭐' * mood}\n\n{moods_text.get(mood, '')}"
     await callback.message.edit_text(text, parse_mode="HTML")
-    await callback.message.answer("Отличного дня! \u2764\ufe0f", reply_markup=main_menu_kb())
+    await callback.message.answer("Отличного дня! ❤️", reply_markup=main_menu_kb())
     await callback.answer()

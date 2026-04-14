@@ -25,20 +25,20 @@ class OnboardingStates(StatesGroup):
 
 
 WELCOME_TEXT = (
-    "\ud83d\ude4c <b>Добро пожаловать в QuitSmoke Bot!</b>\n\n"
+    "🙌 <b>Добро пожаловать в QuitSmoke Bot!</b>\n\n"
     "Я помогу вам бросить курить, используя проверенные методики:\n\n"
-    "\ud83d\udcca <b>Трекинг прогресса</b> — дни, деньги, здоровье\n"
-    "\ud83c\udd98 <b>SOS-кнопка</b> — мгновенная помощь при тяге\n"
-    "\ud83c\udfc6 <b>Достижения</b> — геймификация пути\n"
-    "\ud83c\udfe5 <b>Шкала здоровья</b> — как тело восстанавливается\n"
-    "\ud83d\ude4f <b>Мотивация</b> — ежедневная поддержка\n\n"
+    "📊 <b>Трекинг прогресса</b> — дни, деньги, здоровье\n"
+    "🆘 <b>SOS-кнопка</b> — мгновенная помощь при тяге\n"
+    "🏆 <b>Достижения</b> — геймификация пути\n"
+    "🏥 <b>Шкала здоровья</b> — как тело восстанавливается\n"
+    "🙏 <b>Мотивация</b> — ежедневная поддержка\n\n"
     "Давайте настроим ваш профиль!\n\n"
-    "\ud83d\udeac <b>Сколько сигарет в день вы курите (курили)?</b>\n"
+    "🚬 <b>Сколько сигарет в день вы курите (курили)?</b>\n"
     "Напишите число:"
 )
 
 RETURNING_TEXT = (
-    "\ud83d\udc4b <b>С возвращением!</b>\n\n"
+    "👋 <b>С возвращением!</b>\n\n"
     "Рад снова вас видеть. Используйте меню ниже."
 )
 
@@ -63,14 +63,14 @@ async def process_cpd(message: Message, state: FSMContext) -> None:
         if cpd < 1 or cpd > 200:
             raise ValueError
     except (ValueError, AttributeError):
-        await message.answer("\u274c Введите число от 1 до 200:")
+        await message.answer("❌ Введите число от 1 до 200:")
         return
 
     await update_field(message.from_user.id, "cigarettes_per_day", cpd)
     await state.update_data(cpd=cpd)
     await state.set_state(OnboardingStates.price_per_pack)
     await message.answer(
-        "\ud83d\udcb5 <b>Сколько стоит одна пачка сигарет (в рублях)?</b>\n"
+        "💵 <b>Сколько стоит одна пачка сигарет (в рублях)?</b>\n"
         "Напишите число:",
         parse_mode="HTML",
     )
@@ -83,14 +83,14 @@ async def process_price(message: Message, state: FSMContext) -> None:
         if price <= 0 or price > 10000:
             raise ValueError
     except (ValueError, AttributeError):
-        await message.answer("\u274c Введите цену от 1 до 10000:")
+        await message.answer("❌ Введите цену от 1 до 10000:")
         return
 
     await update_field(message.from_user.id, "price_per_pack", price)
     await state.update_data(price=price)
     await state.set_state(OnboardingStates.years_smoking)
     await message.answer(
-        "\ud83d\udcc5 <b>Сколько лет вы курите?</b>\nНапишите число:",
+        "📅 <b>Сколько лет вы курите?</b>\nНапишите число:",
         parse_mode="HTML",
     )
 
@@ -102,14 +102,14 @@ async def process_years(message: Message, state: FSMContext) -> None:
         if years < 0 or years > 80:
             raise ValueError
     except (ValueError, AttributeError):
-        await message.answer("\u274c Введите число от 0 до 80:")
+        await message.answer("❌ Введите число от 0 до 80:")
         return
 
     await update_field(message.from_user.id, "years_smoking", years)
     await state.update_data(years=years)
     await state.set_state(OnboardingStates.motivation)
     await message.answer(
-        "\ud83d\udcad <b>Почему вы хотите бросить курить?</b>\n\n"
+        "💭 <b>Почему вы хотите бросить курить?</b>\n\n"
         "Напишите свою главную причину. Мы будем напоминать вам о ней "
         "в трудные моменты.\n\n"
         "<i>Например: «Ради здоровья детей», «Хочу пробежать марафон», "
@@ -122,7 +122,7 @@ async def process_years(message: Message, state: FSMContext) -> None:
 async def process_motivation(message: Message, state: FSMContext) -> None:
     motivation = (message.text or "").strip()[:500]
     if not motivation:
-        await message.answer("\u274c Пожалуйста, напишите хотя бы пару слов:")
+        await message.answer("❌ Пожалуйста, напишите хотя бы пару слов:")
         return
 
     await update_field(message.from_user.id, "motivation", motivation)
@@ -130,11 +130,11 @@ async def process_motivation(message: Message, state: FSMContext) -> None:
     await state.set_state(OnboardingStates.confirm)
 
     summary = (
-        "\ud83d\udccb <b>Ваш профиль:</b>\n\n"
-        f"\ud83d\udeac Сигарет в день: <b>{data.get('cpd', '?')}</b>\n"
-        f"\ud83d\udcb5 Цена пачки: <b>{data.get('price', '?')}\u20bd</b>\n"
-        f"\ud83d\udcc5 Стаж курения: <b>{data.get('years', '?')} лет</b>\n"
-        f"\ud83d\udcad Мотивация: <i>{motivation}</i>\n\n"
+        "📋 <b>Ваш профиль:</b>\n\n"
+        f"🚬 Сигарет в день: <b>{data.get('cpd', '?')}</b>\n"
+        f"💵 Цена пачки: <b>{data.get('price', '?')}₽</b>\n"
+        f"📅 Стаж курения: <b>{data.get('years', '?')} лет</b>\n"
+        f"💭 Мотивация: <i>{motivation}</i>\n\n"
         "Всё верно?"
     )
     await message.answer(summary, reply_markup=onboarding_confirm_kb(), parse_mode="HTML")
@@ -149,14 +149,14 @@ async def confirm_onboarding(callback: CallbackQuery, state: FSMContext) -> None
     await state.clear()
 
     text = (
-        "\ud83c\udf89 <b>Поздравляем! Ваш путь к свободе начинается ПРЯМО СЕЙЧАС!</b>\n\n"
-        "\u23f0 Отсчёт пошёл. Каждая секунда без сигареты — ваша победа.\n\n"
+        "🎉 <b>Поздравляем! Ваш путь к свободе начинается ПРЯМО СЕЙЧАС!</b>\n\n"
+        "⏰ Отсчёт пошёл. Каждая секунда без сигареты — ваша победа.\n\n"
         "Используйте кнопки меню:\n"
-        "\u2022 \ud83d\udcca <b>Мой прогресс</b> — дни, деньги, сигареты\n"
-        "\u2022 \ud83c\udd98 <b>Тяга!</b> — мгновенная помощь при приступе\n"
-        "\u2022 \ud83c\udfe5 <b>Здоровье</b> — шкала восстановления\n"
-        "\u2022 \ud83c\udfc6 <b>Достижения</b> — ваши награды\n\n"
-        "\ud83d\udcaa Вы справитесь!"
+        "• 📊 <b>Мой прогресс</b> — дни, деньги, сигареты\n"
+        "• 🆘 <b>Тяга!</b> — мгновенная помощь при приступе\n"
+        "• 🏥 <b>Здоровье</b> — шкала восстановления\n"
+        "• 🏆 <b>Достижения</b> — ваши награды\n\n"
+        "💪 Вы справитесь!"
     )
     await callback.message.edit_text(text, parse_mode="HTML")
     await callback.message.answer("Выберите действие:", reply_markup=main_menu_kb())
@@ -167,7 +167,7 @@ async def confirm_onboarding(callback: CallbackQuery, state: FSMContext) -> None
 async def restart_onboarding(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(OnboardingStates.cigarettes_per_day)
     await callback.message.edit_text(
-        "\ud83d\udeac <b>Сколько сигарет в день вы курите?</b>\nНапишите число:",
+        "🚬 <b>Сколько сигарет в день вы курите?</b>\nНапишите число:",
         parse_mode="HTML",
     )
     await callback.answer()

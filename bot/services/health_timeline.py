@@ -11,91 +11,91 @@ HEALTH_MILESTONES: list[dict] = [
         "minutes": 20,
         "title": "20 минут",
         "text": "Пульс и давление начинают приходить в норму.",
-        "emoji": "\u2764\ufe0f",
+        "emoji": "❤️",
     },
     {
         "minutes": 480,
         "title": "8 часов",
         "text": "Уровень угарного газа в крови снижается вдвое. Кислород приходит в норму.",
-        "emoji": "\ud83e\ude78",
+        "emoji": "🩸",
     },
     {
         "minutes": 720,
         "title": "12 часов",
         "text": "Угарный газ полностью выведен из организма.",
-        "emoji": "\ud83d\udca8",
+        "emoji": "💨",
     },
     {
         "minutes": 1440,
         "title": "24 часа",
         "text": "Риск сердечного приступа начинает снижаться.",
-        "emoji": "\ud83d\udc93",
+        "emoji": "💓",
     },
     {
         "minutes": 2880,
         "title": "48 часов",
         "text": "Нервные окончания восстанавливаются. Вкус и запах становятся ярче.",
-        "emoji": "\ud83d\udc43",
+        "emoji": "👃",
     },
     {
         "minutes": 4320,
         "title": "72 часа",
         "text": "Бронхи расслабляются. Дышать становится легче. Весь никотин вышел!",
-        "emoji": "\ud83c\udf3f",
+        "emoji": "🌿",
     },
     {
         "minutes": 14400,
         "title": "10 дней",
         "text": "Кровообращение в дёснах нормализуется.",
-        "emoji": "\ud83e\uddb7",
+        "emoji": "🦷",
     },
     {
         "minutes": 20160,
         "title": "2 недели",
         "text": "Кровообращение значительно улучшилось. Ходить стало легче.",
-        "emoji": "\ud83d\udeb6",
+        "emoji": "🚶",
     },
     {
         "minutes": 43200,
         "title": "1 месяц",
         "text": "Кашель и одышка уменьшаются. Лёгкие начинают восстанавливаться.",
-        "emoji": "\ud83c\udf43",
+        "emoji": "🍃",
     },
     {
         "minutes": 129600,
         "title": "3 месяца",
         "text": "Объём лёгких увеличился на 30%. Физическая форма улучшается.",
-        "emoji": "\ud83c\udfc3",
+        "emoji": "🏃",
     },
     {
         "minutes": 259200,
         "title": "6 месяцев",
         "text": "Хронический кашель почти прошёл. Стресс снижается.",
-        "emoji": "\ud83c\udf3b",
+        "emoji": "🌻",
     },
     {
         "minutes": 525600,
         "title": "1 год",
         "text": "Риск ишемической болезни сердца снизился вдвое!",
-        "emoji": "\ud83c\udf89",
+        "emoji": "🎉",
     },
     {
         "minutes": 2628000,
         "title": "5 лет",
         "text": "Риск инсульта сравнялся с риском некурящего.",
-        "emoji": "\ud83e\udde0",
+        "emoji": "🧠",
     },
     {
         "minutes": 5256000,
         "title": "10 лет",
         "text": "Риск рака лёгких снизился вдвое. Риск рака гортани и почек тоже падает.",
-        "emoji": "\ud83c\udf1f",
+        "emoji": "🌟",
     },
     {
         "minutes": 7884000,
         "title": "15 лет",
         "text": "Риск сердечных заболеваний как у человека, который никогда не курил!",
-        "emoji": "\ud83d\udc96",
+        "emoji": "💖",
     },
 ]
 
@@ -119,13 +119,13 @@ def build_health_report(smoke_free_minutes: float) -> str:
     current = get_current_milestone(smoke_free_minutes)
     nxt = get_next_milestone(smoke_free_minutes)
 
-    lines: list[str] = ["\ud83c\udfe5 <b>Шкала восстановления здоровья</b>\n"]
+    lines: list[str] = ["🏥 <b>Шкала восстановления здоровья</b>\n"]
 
     for m in HEALTH_MILESTONES:
         if smoke_free_minutes >= m["minutes"]:
-            lines.append(f"  \u2705 {m['emoji']} <b>{m['title']}</b> — {m['text']}")
+            lines.append(f"  ✅ {m['emoji']} <b>{m['title']}</b> — {m['text']}")
         else:
-            lines.append(f"  \u2b1c {m['emoji']} {m['title']} — {m['text']}")
+            lines.append(f"  ⬜ {m['emoji']} {m['title']} — {m['text']}")
             break  # show only one upcoming milestone
 
     if nxt:
@@ -136,8 +136,8 @@ def build_health_report(smoke_free_minutes: float) -> str:
             time_left = f"{remaining / 60:.1f} ч."
         else:
             time_left = f"{remaining / 1440:.0f} дн."
-        lines.append(f"\n\u23f3 До следующего улучшения: <b>{time_left}</b>")
+        lines.append(f"\n⏳ До следующего улучшения: <b>{time_left}</b>")
     else:
-        lines.append("\n\ud83c\udf1f <b>Вы прошли все этапы восстановления!</b>")
+        lines.append("\n🌟 <b>Вы прошли все этапы восстановления!</b>")
 
     return "\n".join(lines)

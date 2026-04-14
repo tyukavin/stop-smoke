@@ -16,7 +16,7 @@ from bot.services.user_service import get_user
 router = Router()
 
 
-@router.message(F.text == "\ud83c\udfc6 Достижения")
+@router.message(F.text == "🏆 Достижения")
 async def show_achievements(message: Message) -> None:
     user = await get_user(message.from_user.id)
     if not user or not user.onboarding_complete:
@@ -26,17 +26,17 @@ async def show_achievements(message: Message) -> None:
     await check_and_unlock(user)
     unlocked = set(await get_user_achievements(user.user_id))
 
-    text = "\ud83c\udfc6 <b>Ваши достижения</b>\n\n"
+    text = "🏆 <b>Ваши достижения</b>\n\n"
     unlocked_count = 0
     total_count = len(ACHIEVEMENTS)
 
     for code, info in ACHIEVEMENTS.items():
         if code in unlocked:
-            text += f"\u2705 {info['emoji']} <b>{info['title']}</b> — {info['description']}\n"
+            text += f"✅ {info['emoji']} <b>{info['title']}</b> — {info['description']}\n"
             unlocked_count += 1
         else:
-            text += f"\ud83d\udd12 {info['emoji']} {info['title']} — ???\n"
+            text += f"🔒 {info['emoji']} {info['title']} — ???\n"
 
-    text += f"\n\ud83d\udcca Открыто: <b>{unlocked_count}/{total_count}</b>"
+    text += f"\n📊 Открыто: <b>{unlocked_count}/{total_count}</b>"
 
     await message.answer(text, reply_markup=main_menu_kb(), parse_mode="HTML")

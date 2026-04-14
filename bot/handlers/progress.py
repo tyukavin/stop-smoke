@@ -37,7 +37,7 @@ def _format_minutes(minutes: int) -> str:
     return f"{days} дн. {h} ч."
 
 
-@router.message(F.text == "\ud83d\udcca Мой прогресс")
+@router.message(F.text == "📊 Мой прогресс")
 async def show_progress(message: Message) -> None:
     user = await get_user(message.from_user.id)
     if not user or not user.onboarding_complete:
@@ -47,25 +47,25 @@ async def show_progress(message: Message) -> None:
     new_achievements = await check_and_unlock(user)
 
     text = (
-        f"\ud83d\udcca <b>Ваш прогресс</b>\n\n"
-        f"\ud83d\udcc5 Без сигарет: <b>{_format_duration(user.smoke_free_days)}</b>\n"
-        f"\ud83d\udeac Не выкурено: <b>{user.cigarettes_avoided} сигарет</b>\n"
-        f"\ud83d\udcb0 Сэкономлено: <b>{user.money_saved:.0f}\u20bd</b>\n"
-        f"\u2764\ufe0f Возвращено жизни: <b>{_format_minutes(user.life_regained_minutes)}</b>\n"
+        f"📊 <b>Ваш прогресс</b>\n\n"
+        f"📅 Без сигарет: <b>{_format_duration(user.smoke_free_days)}</b>\n"
+        f"🚬 Не выкурено: <b>{user.cigarettes_avoided} сигарет</b>\n"
+        f"💰 Сэкономлено: <b>{user.money_saved:.0f}₽</b>\n"
+        f"❤️ Возвращено жизни: <b>{_format_minutes(user.life_regained_minutes)}</b>\n"
     )
 
     if user.motivation:
-        text += f"\n\ud83d\udcad Ваша причина: <i>{user.motivation}</i>\n"
+        text += f"\n💭 Ваша причина: <i>{user.motivation}</i>\n"
 
     if new_achievements:
-        text += "\n\ud83c\udf1f <b>Новые достижения!</b>\n"
+        text += "\n🌟 <b>Новые достижения!</b>\n"
         for code in new_achievements:
             text += f"\n{format_achievement(code)}\n"
 
     await message.answer(text, reply_markup=main_menu_kb(), parse_mode="HTML")
 
 
-@router.message(F.text == "\ud83d\udcb0 Экономия")
+@router.message(F.text == "💰 Экономия")
 async def show_economy(message: Message) -> None:
     user = await get_user(message.from_user.id)
     if not user or not user.onboarding_complete:
@@ -78,27 +78,27 @@ async def show_economy(message: Message) -> None:
     yearly_cost = daily_cost * 365
 
     text = (
-        f"\ud83d\udcb0 <b>Финансовая свобода</b>\n\n"
+        f"💰 <b>Финансовая свобода</b>\n\n"
         f"Вы тратили на сигареты:\n"
-        f"  \u2022 В день: <b>{daily_cost:.0f}\u20bd</b>\n"
-        f"  \u2022 В месяц: <b>{monthly_cost:.0f}\u20bd</b>\n"
-        f"  \u2022 В год: <b>{yearly_cost:.0f}\u20bd</b>\n\n"
-        f"\u2705 <b>Уже сэкономлено: {user.money_saved:.0f}\u20bd</b>\n\n"
-        f"\ud83d\udca1 На эти деньги можно:\n"
+        f"  • В день: <b>{daily_cost:.0f}₽</b>\n"
+        f"  • В месяц: <b>{monthly_cost:.0f}₽</b>\n"
+        f"  • В год: <b>{yearly_cost:.0f}₽</b>\n\n"
+        f"✅ <b>Уже сэкономлено: {user.money_saved:.0f}₽</b>\n\n"
+        f"💡 На эти деньги можно:\n"
     )
 
     saved = user.money_saved
     if saved >= 50000:
-        text += "  \u2022 Слетать в отпуск! \u2708\ufe0f\n"
+        text += "  • Слетать в отпуск! ✈️\n"
     if saved >= 10000:
-        text += "  \u2022 Купить крутые кроссовки \ud83d\udc5f\n"
+        text += "  • Купить крутые кроссовки 👟\n"
     if saved >= 5000:
-        text += "  \u2022 Сходить в хороший ресторан \ud83c\udf7d\ufe0f\n"
+        text += "  • Сходить в хороший ресторан 🍽️\n"
     if saved >= 1000:
-        text += "  \u2022 Купить книгу или подписку \ud83d\udcda\n"
+        text += "  • Купить книгу или подписку 📚\n"
     if saved >= 250:
-        text += "  \u2022 Выпить отличный кофе \u2615\n"
+        text += "  • Выпить отличный кофе ☕\n"
     if saved < 250:
-        text += "  \u2022 Совсем скоро хватит на хороший кофе! \u2615\n"
+        text += "  • Совсем скоро хватит на хороший кофе! ☕\n"
 
     await message.answer(text, reply_markup=main_menu_kb(), parse_mode="HTML")

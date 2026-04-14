@@ -12,7 +12,7 @@ from bot.services.user_service import get_user
 router = Router()
 
 
-@router.message(F.text == "\ud83c\udfe5 Здоровье")
+@router.message(F.text == "🏥 Здоровье")
 async def show_health(message: Message) -> None:
     user = await get_user(message.from_user.id)
     if not user or not user.onboarding_complete:

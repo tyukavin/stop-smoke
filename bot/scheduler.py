@@ -54,7 +54,7 @@ async def evening_motivation_job(bot) -> None:
                 quote = get_random_motivation()
                 await bot.send_message(
                     u["user_id"],
-                    f"\ud83c\udf19 <b>Вечерняя мотивация</b>\n\n{quote}",
+                    f"🌙 <b>Вечерняя мотивация</b>\n\n{quote}",
                     parse_mode="HTML",
                 )
             except Exception:

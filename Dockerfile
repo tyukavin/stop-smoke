@@ -1,12 +1,16 @@
-FROM python:3.12-slim
+FROM node:22-slim
+
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY package*.json ./
+RUN npm ci --omit=dev && npm install tsx
 
 COPY . .
 
 RUN mkdir -p /app/data
 
-CMD ["python", "main.py"]
+EXPOSE 3000
+
+CMD ["npx", "tsx", "src/index.ts"]

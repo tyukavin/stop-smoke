@@ -1,10 +1,6 @@
-__pycache__/
-*.py[cod]
-*$py.class
-*.egg-info/
+node_modules/
 dist/
-build/
 .env
 data/*.db
-.venv/
-venv/
+data/test_*.db
+*.tgz

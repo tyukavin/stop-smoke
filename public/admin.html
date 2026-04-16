@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuitSmoke Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3a;--text:#e0e0e0;--muted:#888;--accent:#6c5ce7;--accent2:#00cec9;--danger:#e74c3c;--success:#00b894;--input-bg:#22252f}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-box{background:var(--card);border-radius:16px;padding:40px;width:380px;border:1px solid var(--border)}
+.login-box h1{text-align:center;margin-bottom:24px;font-size:24px}
+.login-box input{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:15px;margin-bottom:12px}
+.login-box button{width:100%;padding:12px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:15px;cursor:pointer;font-weight:600}
+.login-box button:hover{opacity:.9}
+.login-box .err{color:var(--danger);text-align:center;margin-top:8px;font-size:13px}
+.app{display:none}
+nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:10}
+nav .logo{font-weight:700;font-size:18px;color:var(--accent2)}
+nav a{color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:6px;font-size:14px;cursor:pointer;transition:.2s}
+nav a:hover,nav a.active{color:#fff;background:var(--accent)}
+nav .spacer{flex:1}
+nav .logout{color:var(--danger);cursor:pointer;font-size:13px}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.stat-card .num{font-size:32px;font-weight:700;color:var(--accent2)}
+.stat-card .label{color:var(--muted);font-size:13px;margin-top:4px}
+.section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.section h2{font-size:18px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.section h2 .count{background:var(--accent);color:#fff;font-size:12px;padding:2px 8px;border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);color:var(--muted);font-size:12px;text-transform:uppercase}
+td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:top;max-width:400px;overflow:hidden;text-overflow:ellipsis}
+tr:hover{background:rgba(108,92,231,.05)}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:var(--accent);color:#fff}
+.badge.myth{background:#e17055}.badge.sos{background:#00cec9}.badge.cbt{background:#fdcb6e;color:#333}
+.badge.mind{background:#a29bfe}.badge.tip{background:#fab1a0;color:#333}.badge.health{background:#55efc4;color:#333}
+.badge.check{background:#74b9ff;color:#333}
+.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:.2s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{opacity:.85}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{opacity:.85}
+.btn-sm{padding:4px 10px;font-size:12px}
+.form-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.form-row select,.form-row input{padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:14px}
+.form-row select{min-width:160px}
+.form-row input{flex:1;min-width:200px}
+textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:14px;resize:vertical;min-height:80px;margin-bottom:12px;font-family:inherit}
+.tab-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tab-bar .tab{padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;background:var(--input-bg);color:var(--muted);border:1px solid var(--border);transition:.2s}
+.tab-bar .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.hidden{display:none}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--success);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:999;opacity:0;transition:.3s}
+.toast.show{opacity:1}
+@media(max-width:600px){.container{padding:12px}nav{padding:8px 12px;flex-wrap:wrap}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+<div class="login-box">
+  <h1>🔓 QuitSmoke Admin</h1>
+  <input id="loginId" type="number" placeholder="Telegram ID">
+  <button onclick="doLogin()">Войти</button>
+  <div class="err" id="loginErr"></div>
+</div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+<nav>
+  <span class="logo">🔓 QuitSmoke</span>
+  <a onclick="showPage('dashboard')" id="nav-dashboard" class="active">Дашборд</a>
+  <a onclick="showPage('content')" id="nav-content">Контент</a>
+  <a onclick="showPage('materials')" id="nav-materials">Материалы</a>
+  <span class="spacer"></span>
+  <span class="logout" onclick="logout()">Выйти</span>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="container page" id="page-dashboard">
+  <div class="stats" id="statsGrid"></div>
+</div>
+
+<!-- CONTENT -->
+<div class="container page hidden" id="page-content">
+  <div class="section">
+    <h2>➕ Добавить контент</h2>
+    <div class="form-row">
+      <select id="addType">
+        <option value="motivation">motivation</option>
+        <option value="myth">myth</option>
+        <option value="sos_rational">sos_rational</option>
+        <option value="sos_switching">sos_switching</option>
+        <option value="sos_celebrating">sos_celebrating</option>
+        <option value="trigger_tip">trigger_tip</option>
+        <option value="health_fact">health_fact</option>
+        <option value="cbt_technique">cbt_technique</option>
+        <option value="mindfulness">mindfulness</option>
+        <option value="checkin_morning">checkin_morning</option>
+        <option value="checkin_evening">checkin_evening</option>
+      </select>
+      <input id="addCategory" placeholder="Категория (для myth/trigger_tip)">
+    </div>
+    <textarea id="addText" placeholder="Текст (поддерживается HTML)"></textarea>
+    <button class="btn btn-primary" onclick="addContent()">Добавить</button>
+  </div>
+
+  <div class="section">
+    <h2>📝 Контент <span class="count" id="contentCount">0</span></h2>
+    <div class="tab-bar" id="contentTabs"></div>
+    <table><thead><tr><th>ID</th><th>Тип</th><th>Кат.</th><th>Текст</th><th></th></tr></thead>
+    <tbody id="contentBody"></tbody></table>
+  </div>
+</div>
+
+<!-- MATERIALS -->
+<div class="container page hidden" id="page-materials">
+  <div class="section">
+    <h2>➕ Добавить материал</h2>
+    <div class="form-row">
+      <input id="matTitle" placeholder="Название">
+      <input id="matUrl" placeholder="URL">
+    </div>
+    <div class="form-row">
+      <input id="matDesc" placeholder="Описание">
+      <select id="matCat">
+        <option value="general">Общее</option>
+        <option value="book">Книги</option>
+        <option value="video">Видео</option>
+        <option value="article">Статьи</option>
+        <option value="app">Приложения</option>
+        <option value="community">Сообщества</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="addMaterial()">Добавить</button>
+  </div>
+
+  <div class="section">
+    <h2>📚 Материалы <span class="count" id="matCount">0</span></h2>
+    <table><thead><tr><th>ID</th><th>Название</th><th>URL</th><th>Кат.</th><th></th></tr></thead>
+    <tbody id="matBody"></tbody></table>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = window.location.origin + '/api';
+let token = localStorage.getItem('qs_token') || '';
+
+function headers() { return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }; }
+
+async function api(method, path, body) {
+  const opts = { method, headers: headers() };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  return r.json();
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function stripHtml(s) { return s.replace(/<[^>]+>/g, '').slice(0, 100); }
+
+function badgeClass(type) {
+  if (type.startsWith('myth')) return 'myth';
+  if (type.startsWith('sos')) return 'sos';
+  if (type.startsWith('cbt')) return 'cbt';
+  if (type.startsWith('mind')) return 'mind';
+  if (type.startsWith('trigger')) return 'tip';
+  if (type.startsWith('health')) return 'health';
+  if (type.startsWith('checkin')) return 'check';
+  return '';
+}
+
+// AUTH
+async function doLogin() {
+  const id = document.getElementById('loginId').value;
+  const err = document.getElementById('loginErr');
+  if (!id) { err.textContent = 'Введите Telegram ID'; return; }
+  try {
+    const r = await fetch(API + '/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telegram_id: parseInt(id) })
+    });
+    const data = await r.json();
+    if (data.token) {
+      token = data.token;
+      localStorage.setItem('qs_token', token);
+      showApp();
+    } else {
+      err.textContent = data.error || 'Ошибка входа';
+    }
+  } catch (e) { err.textContent = 'Ошибка сети'; }
+}
+
+function logout() {
+  token = '';
+  localStorage.removeItem('qs_token');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginWrap').style.display = 'flex';
+}
+
+async function showApp() {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  showPage('dashboard');
+}
+
+// PAGES
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+  document.getElementById('page-' + name).classList.remove('hidden');
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  const nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'content') loadContent();
+  if (name === 'materials') loadMaterials();
+}
+
+// DASHBOARD
+async function loadDashboard() {
+  try {
+    const stats = await api('GET', '/users/stats');
+    const content = await api('GET', '/content');
+    const types = {};
+    if (content.items) content.items.forEach(c => { types[c.type] = (types[c.type] || 0) + 1; });
+    const grid = document.getElementById('statsGrid');
+    grid.innerHTML = `
+      <div class="stat-card"><div class="num">${stats.total || 0}</div><div class="label">Всего пользователей</div></div>
+      <div class="stat-card"><div class="num">${stats.active || 0}</div><div class="label">Активных</div></div>
+      <div class="stat-card"><div class="num">${content.total || 0}</div><div class="label">Единиц контента</div></div>
+      ${Object.entries(types).map(([t, n]) => `<div class="stat-card"><div class="num">${n}</div><div class="label">${t}</div></div>`).join('')}
+    `;
+  } catch(e) { if (e.message?.includes('401') || String(e).includes('Unauthorized')) logout(); }
+}
+
+// CONTENT
+let contentFilter = '';
+async function loadContent() {
+  const data = await api('GET', '/content' + (contentFilter ? '?type=' + contentFilter : ''));
+  const items = data.items || [];
+  document.getElementById('contentCount').textContent = items.length;
+
+  const types = [...new Set(items.map(i => i.type))].sort();
+  const tabs = document.getElementById('contentTabs');
+  tabs.innerHTML = `<div class="tab ${!contentFilter ? 'active' : ''}" onclick="filterContent('')">Все</div>` +
+    types.map(t => `<div class="tab ${contentFilter === t ? 'active' : ''}" onclick="filterContent('${t}')">${t} (${items.filter(i=>i.type===t).length})</div>`).join('');
+
+  const tbody = document.getElementById('contentBody');
+  tbody.innerHTML = items.slice(0, 100).map(c => `
+    <tr>
+      <td>${c.id}</td>
+      <td><span class="badge ${badgeClass(c.type)}">${c.type}</span></td>
+      <td>${c.category || '—'}</td>
+      <td>${stripHtml(c.text)}…</td>
+      <td><button class="btn btn-danger btn-sm" onclick="delContent(${c.id})">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+function filterContent(type) { contentFilter = type; loadContent(); }
+
+async function addContent() {
+  const type = document.getElementById('addType').value;
+  const category = document.getElementById('addCategory').value.trim();
+  const text = document.getElementById('addText').value.trim();
+  if (!text) return;
+  await api('POST', '/content', { type, category, text });
+  document.getElementById('addText').value = '';
+  document.getElementById('addCategory').value = '';
+  toast('Контент добавлен!');
+  loadContent();
+}
+
+async function delContent(id) {
+  if (!confirm('Удалить контент #' + id + '?')) return;
+  await api('DELETE', '/content/' + id);
+  toast('Удалено');
+  loadContent();
+}
+
+// MATERIALS
+async function loadMaterials() {
+  const items = await api('GET', '/materials/all');
+  document.getElementById('matCount').textContent = Array.isArray(items) ? items.length : 0;
+  const tbody = document.getElementById('matBody');
+  if (!Array.isArray(items)) { tbody.innerHTML = '<tr><td colspan="5">Нет данных</td></tr>'; return; }
+  tbody.innerHTML = items.map(m => `
+    <tr>
+      <td>${m.id}</td>
+      <td>${m.title}</td>
+      <td><a href="${m.url}" target="_blank" style="color:var(--accent2)">${m.url.slice(0,40)}…</a></td>
+      <td>${m.category}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="delMaterial(${m.id})">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+async function addMaterial() {
+  const title = document.getElementById('matTitle').value.trim();
+  const url = document.getElementById('matUrl').value.trim();
+  const description = document.getElementById('matDesc').value.trim();
+  const category = document.getElementById('matCat').value;
+  if (!title || !url) return;
+  await api('POST', '/materials', { title, url, description, category });
+  document.getElementById('matTitle').value = '';
+  document.getElementById('matUrl').value = '';
+  document.getElementById('matDesc').value = '';
+  toast('Материал добавлен!');
+  loadMaterials();
+}
+
+async function delMaterial(id) {
+  if (!confirm('Удалить материал #' + id + '?')) return;
+  await api('DELETE', '/materials/' + id);
+  toast('Удалено');
+  loadMaterials();
+}
+
+// INIT
+if (token) {
+  fetch(API + '/users/me', { headers: headers() })
+    .then(r => r.json())
+    .then(d => { if (d.error) logout(); else showApp(); })
+    .catch(() => logout());
+} else {
+  document.getElementById('loginWrap').style.display = 'flex';
+}
+</script>
+</body>
+</html>

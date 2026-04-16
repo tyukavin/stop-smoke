@@ -10,6 +10,16 @@ db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
 export function initDb() {
+  // Detect old Python schema and drop it
+  const cols = db.prepare("PRAGMA table_info('users')").all() as { name: string }[];
+  const colNames = cols.map(c => c.name);
+  if (colNames.length > 0 && !colNames.includes('telegram_id')) {
+    console.log('Detected old schema, recreating database...');
+    for (const t of ['content_deliveries', 'daily_checkins', 'mood_logs', 'user_achievements', 'cravings', 'materials', 'content', 'users']) {
+      db.exec(`DROP TABLE IF EXISTS ${t}`);
+    }
+  }
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id              INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -8,8 +8,11 @@ import { maybeSendMeme } from '../../services/memeHelper.js';
 
 const MYTH_MENU_TEXT = '🎭 <b>Убийца мифов</b>\n\nТабачные компании создали мифы. Давай разрушим их.\nВыбери категорию:';
 
-function backToMythsKb() {
-  return new InlineKeyboard().text('🎭 Мифы', 'myths_menu');
+function mythResultKb() {
+  return new InlineKeyboard()
+    .text('🎭 Мифы', 'myths_menu')
+    .row()
+    .text('🔄 Ещё один миф', 'myth_random');
 }
 
 export function mythsHandlers(bot: Bot<BotContext>) {
@@ -22,13 +25,13 @@ export function mythsHandlers(bot: Bot<BotContext>) {
   bot.hears('🎭 Мифы', showMenu);
   bot.command('myth', showMenu);
 
-  // Back to myths menu — edit current message
+  // Back to myths menu — replace current message with category list
   bot.callbackQuery('myths_menu', async (ctx) => {
     await ctx.editMessageText(MYTH_MENU_TEXT, { parse_mode: 'HTML', reply_markup: mythCategoriesKb() });
     await ctx.answerCallbackQuery();
   });
 
-  // Category selected — replace message with myth text + back button
+  // Category selected — strip buttons from current message, send new message with myth
   bot.callbackQuery(/^myth_(.+)$/, async (ctx) => {
     const category = ctx.match![1];
     const user = getUser(ctx.from!.id);
@@ -40,7 +43,13 @@ export function mythsHandlers(bot: Bot<BotContext>) {
 
     const mythText = c?.text || '💪 Все мифы в этой категории уже разрушены! Попробуй другую.';
 
-    await ctx.editMessageText(mythText, { parse_mode: 'HTML', reply_markup: backToMythsKb() });
+    // Remove buttons from the old message, keep text in history
+    try {
+      await ctx.editMessageReplyMarkup({ reply_markup: { inline_keyboard: [] } });
+    } catch { /* ignore if already edited */ }
+
+    // Send myth as a new message with action buttons
+    await ctx.reply(mythText, { parse_mode: 'HTML', reply_markup: mythResultKb() });
     await maybeSendMeme(ctx, 'motivation', 0.15);
     await ctx.answerCallbackQuery();
   });

@@ -5,6 +5,7 @@ import { getUser, resetQuitDate } from '../../services/user.js';
 import { getContentForUser, getRandomContent } from '../../services/content.js';
 import { logCraving, getCravingStats } from '../../services/craving.js';
 import { checkAndUnlock, formatAchievement } from '../../services/achievements.js';
+import { maybeSendMeme } from '../../services/memeHelper.js';
 
 export function sosHandlers(bot: Bot<BotContext>) {
   bot.hears('🆘 Чудовище атакует!', async (ctx) => {
@@ -12,10 +13,9 @@ export function sosHandlers(bot: Bot<BotContext>) {
     if (!user?.onboarding_done) { await ctx.reply('Сначала /start'); return; }
     ctx.session.step = 'sos';
     await ctx.reply(
-      '🆘 <b>Маленькое Чудовище атакует!</b>\n\n' +
-      'Спокойно. Это никотиновый паразит требует еды. Он умирает.\n' +
-      'Это не настоящее желание. Пройдёт через минуты.\n\n' +
-      'Выбери помощь:',
+      '🆘 <b>Чудовище подкрадывается? Ха!</b>\n\n' +
+      'Оно голодное и жалкое. Через пару минут сдохнет.\n' +
+      'Давай выберем, чем его добить 💀',
       { parse_mode: 'HTML', reply_markup: sosActionsKb() }
     );
   });
@@ -34,6 +34,7 @@ export function sosHandlers(bot: Bot<BotContext>) {
       if (!user) { await ctx.answerCallbackQuery(); return; }
       const c = getContentForUser(user.id, contentType);
       await ctx.reply(c?.text || 'Ты справишься! 💪', { parse_mode: 'HTML' });
+      await maybeSendMeme(ctx, 'sos', 0.4);
       await ctx.answerCallbackQuery();
     });
   }
@@ -45,13 +46,17 @@ export function sosHandlers(bot: Bot<BotContext>) {
     const t = types[Math.floor(Math.random() * types.length)];
     const c = getContentForUser(user.id, t);
     await ctx.reply(c?.text || 'Ты свободен! 🔓', { parse_mode: 'HTML' });
+    await maybeSendMeme(ctx, 'sos', 0.5);
     await ctx.answerCallbackQuery();
   });
 
   bot.callbackQuery('sos_resisted', async (ctx) => {
     ctx.session.cravingResisted = true;
     ctx.session.step = 'sos_intensity';
-    await ctx.editMessageText('🔓 <b>Чудовище побеждено!</b>\n\nОцени силу атаки (1-10):', { parse_mode: 'HTML' });
+    await ctx.editMessageText(
+      '🔓 <b>Чудовище повержено! Красава!</b> 🏆\n\nНасколько жёстко оно атаковало? (1-10):',
+      { parse_mode: 'HTML' }
+    );
     await ctx.editMessageReplyMarkup({ reply_markup: intensityKb() });
     await ctx.answerCallbackQuery();
   });
@@ -59,7 +64,10 @@ export function sosHandlers(bot: Bot<BotContext>) {
   bot.callbackQuery('sos_relapsed', async (ctx) => {
     ctx.session.cravingResisted = false;
     ctx.session.step = 'sos_intensity';
-    await ctx.editMessageText('💭 <b>Давай разберёмся.</b>\n\nОцени силу атаки (1-10):', { parse_mode: 'HTML' });
+    await ctx.editMessageText(
+      '💭 <b>Ладно, давай разберёмся без паники.</b>\n\nНасколько жёстко было? (1-10):',
+      { parse_mode: 'HTML' }
+    );
     await ctx.editMessageReplyMarkup({ reply_markup: intensityKb() });
     await ctx.answerCallbackQuery();
   });
@@ -69,7 +77,7 @@ export function sosHandlers(bot: Bot<BotContext>) {
       if (ctx.session.step !== 'sos_intensity') { await ctx.answerCallbackQuery(); return; }
       ctx.session.cravingIntensity = i;
       ctx.session.step = 'sos_trigger';
-      await ctx.editMessageText('🔍 <b>Что спровоцировало?</b>', { parse_mode: 'HTML' });
+      await ctx.editMessageText('🔍 <b>А что спровоцировало?</b>', { parse_mode: 'HTML' });
       await ctx.editMessageReplyMarkup({ reply_markup: triggerKb() });
       await ctx.answerCallbackQuery();
     });
@@ -93,23 +101,34 @@ export function sosHandlers(bot: Bot<BotContext>) {
 
       let response = '';
       if (resisted) {
-        response += `🔓 <b>Чудовище повержено!</b>\n\nАтака ${intensity}/10 — победа.\n\n` +
-          `📊 Атак: ${stats.total} | Побед: ${stats.resisted} | Ср. сила: ${stats.avgIntensity}\n`;
+        const winRate = stats.total > 0 ? Math.round((stats.resisted / stats.total) * 100) : 100;
+        response += `🔓 <b>GG! Чудовище в нокауте!</b> 🥊\n\n` +
+          `Атака ${intensity}/10 — и ты его размазал.\n\n` +
+          `📊 Счёт: ${stats.resisted}/${stats.total} (${winRate}% побед)\n`;
         const reUser = getUser(ctx.from!.id)!;
         const newAch = checkAndUnlock(reUser);
         if (newAch.length) {
-          response += '\n🌟 <b>Достижение!</b>\n';
+          response += '\n🌟 <b>Новая ачивка!</b>\n';
           for (const code of newAch) response += `\n${formatAchievement(code)}\n`;
         }
       } else {
-        response += '💭 <b>Анализ.</b>\n\nЗакурил — и что? Удовольствия нет, только вина.\n\n' +
-          'Это доказывает: никотин не давал ничего. Таймер обновлён. 🔄\n';
+        response += '💭 <b>Окей, без драмы.</b>\n\n' +
+          'Ну что, получил удовольствие? Нет? Вот и Аллен Карр об этом.\n\n' +
+          'Сигарета опять обманула — не дала ничего, кроме вины.\n' +
+          '🔄 Таймер перезапущен. Погнали заново! 💪\n';
       }
       if (tip) response += `\n💡 <b>Разбор:</b>\n${tip.text}`;
 
       ctx.session.step = undefined;
       await ctx.editMessageText(response, { parse_mode: 'HTML' });
-      await ctx.reply('Продолжаем! 🔓', { reply_markup: mainMenuKb() });
+
+      if (resisted) {
+        await maybeSendMeme(ctx, 'victory', 0.5);
+      } else {
+        await maybeSendMeme(ctx, 'relapse', 0.4);
+      }
+
+      await ctx.reply('Погнали дальше! 🔓', { reply_markup: mainMenuKb() });
       await ctx.answerCallbackQuery();
     });
   }

@@ -100,6 +100,14 @@ export function initDb() {
       created_at  TEXT DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS stickers (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      file_id    TEXT NOT NULL,
+      context    TEXT DEFAULT 'any',
+      active     INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS admins (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
       login         TEXT UNIQUE NOT NULL,

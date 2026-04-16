@@ -2,61 +2,101 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>QuitSmoke Admin</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3a;--text:#e0e0e0;--muted:#888;--accent:#6c5ce7;--accent2:#00cec9;--danger:#e74c3c;--success:#00b894;--input-bg:#22252f;--warn:#fdcb6e}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-text-size-adjust:100%}
 a{color:var(--accent2)}
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
-.login-box{background:var(--card);border-radius:16px;padding:40px;width:380px;border:1px solid var(--border)}
-.login-box h1{text-align:center;margin-bottom:24px;font-size:24px}
-.login-box input{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:15px;margin-bottom:12px}
-.login-box button{width:100%;padding:12px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:15px;cursor:pointer;font-weight:600}
-.login-box button:hover{opacity:.9}
+
+/* LOGIN */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
+.login-box{background:var(--card);border-radius:16px;padding:32px;width:100%;max-width:380px;border:1px solid var(--border)}
+.login-box h1{text-align:center;margin-bottom:24px;font-size:22px}
+.login-box input{width:100%;padding:14px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:16px;margin-bottom:12px}
+.login-box button{width:100%;padding:14px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:16px;cursor:pointer;font-weight:600}
 .err{color:var(--danger);font-size:13px;margin-top:4px}
+
+/* APP */
 .app{display:none}
-nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;flex-wrap:wrap}
-nav .logo{font-weight:700;font-size:18px;color:var(--accent2);margin-right:8px}
-nav a{color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:6px;font-size:14px;cursor:pointer;transition:.2s}
+nav{background:var(--card);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:6px;position:sticky;top:0;z-index:10;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+nav .logo{font-weight:700;font-size:16px;color:var(--accent2);margin-right:6px;white-space:nowrap}
+nav a{color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px;font-size:13px;cursor:pointer;transition:.2s;white-space:nowrap}
 nav a:hover,nav a.active{color:#fff;background:var(--accent)}
-nav .spacer{flex:1}
-nav .logout{color:var(--danger);cursor:pointer;font-size:13px}
-.container{max-width:1200px;margin:0 auto;padding:24px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
-.stat-card .num{font-size:28px;font-weight:700;color:var(--accent2)}
-.stat-card .label{color:var(--muted);font-size:12px;margin-top:4px}
-.section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
-.section h2{font-size:18px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.section h2 .cnt{background:var(--accent);color:#fff;font-size:12px;padding:2px 8px;border-radius:10px}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:8px;border-bottom:2px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase}
+nav .spacer{flex:1;min-width:8px}
+nav .logout{color:var(--danger);cursor:pointer;font-size:13px;white-space:nowrap}
+
+.container{max-width:1200px;margin:0 auto;padding:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
+.stat-card .num{font-size:24px;font-weight:700;color:var(--accent2)}
+.stat-card .label{color:var(--muted);font-size:11px;margin-top:4px}
+.section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.section h2{font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.section h2 .cnt{background:var(--accent);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
+th{text-align:left;padding:8px;border-bottom:2px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;white-space:nowrap}
 td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+td.text-cell{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 tr:hover{background:rgba(108,92,231,.05)}
 .badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:var(--accent);color:#fff}
-.btn{padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;transition:.2s}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:.2s;touch-action:manipulation}
 .btn-p{background:var(--accent);color:#fff}.btn-p:hover{opacity:.85}
 .btn-d{background:var(--danger);color:#fff}.btn-d:hover{opacity:.85}
 .btn-s{background:var(--success);color:#fff}.btn-s:hover{opacity:.85}
 .btn-w{background:var(--warn);color:#333}.btn-w:hover{opacity:.85}
-.form-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.form-row select,.form-row input,.inp{padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);font-size:13px}
-.form-row select{min-width:140px}
-.form-row input,.inp{flex:1;min-width:150px}
-textarea,.ta{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);font-size:13px;resize:vertical;min-height:60px;margin-bottom:10px;font-family:inherit}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* FORMS — WIDE INPUTS */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea,.inp{
+  width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;
+  background:var(--input-bg);color:var(--text);font-size:15px;font-family:inherit}
+.form-group textarea,.ta{resize:vertical;min-height:100px}
+.form-group select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.form-row{display:flex;gap:12px;flex-wrap:wrap}
+.form-row>.form-group{flex:1;min-width:200px}
+
+/* TABS */
 .tab-bar{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.tab-bar .t{padding:4px 12px;border-radius:6px;font-size:12px;cursor:pointer;background:var(--input-bg);color:var(--muted);border:1px solid var(--border)}
+.tab-bar .t{padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;background:var(--input-bg);color:var(--muted);border:1px solid var(--border);white-space:nowrap}
 .tab-bar .t.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* MODAL */
 .hidden{display:none!important}
-.toast{position:fixed;bottom:24px;right:24px;background:var(--success);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:999;opacity:0;transition:.3s}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;width:100%;max-width:560px;margin-top:40px}
+.modal h3{margin-bottom:16px;font-size:17px}
+.modal .form-group{margin-bottom:12px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--success);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;z-index:999;opacity:0;transition:.3s;white-space:nowrap}
 .toast.show{opacity:1}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:flex;align-items:center;justify-content:center}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:500px;max-width:95vw;max-height:85vh;overflow-y:auto}
-.modal h3{margin-bottom:16px;font-size:18px}
-.modal label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;margin-top:10px}
-@media(max-width:600px){.container{padding:12px}nav{padding:8px 12px}}
+
+/* MOBILE */
+@media(max-width:768px){
+  .container{padding:10px}
+  nav{gap:4px;padding:8px 10px}
+  nav a{padding:5px 8px;font-size:12px}
+  nav .logo{font-size:14px}
+  .stats{grid-template-columns:repeat(2,1fr);gap:8px}
+  .stat-card{padding:10px}
+  .stat-card .num{font-size:20px}
+  .section{padding:12px}
+  .section h2{font-size:15px}
+  table{font-size:12px}
+  th,td{padding:5px 6px}
+  .form-row>.form-group{min-width:100%}
+  .modal{margin-top:10px;padding:16px}
+  .btn{padding:10px 16px;font-size:14px}
+}
 </style>
 </head>
 <body>
@@ -64,7 +104,7 @@ textarea,.ta{width:100%;padding:10px;border:1px solid var(--border);border-radiu
 <div class="login-wrap" id="loginWrap">
 <div class="login-box">
   <h1>🔓 QuitSmoke Admin</h1>
-  <input id="loginUser" placeholder="Логин" value="admin">
+  <input id="loginUser" placeholder="Логин">
   <input id="loginPass" type="password" placeholder="Пароль">
   <button onclick="doLogin()">Войти</button>
   <div class="err" id="loginErr"></div>
@@ -73,69 +113,96 @@ textarea,.ta{width:100%;padding:10px;border:1px solid var(--border);border-radiu
 
 <div class="app" id="app">
 <nav>
-  <span class="logo">🔓 QuitSmoke</span>
+  <span class="logo">🔓 QS</span>
   <a onclick="go('dash')" id="n-dash">Дашборд</a>
   <a onclick="go('content')" id="n-content">Контент</a>
   <a onclick="go('materials')" id="n-materials">Материалы</a>
-  <a onclick="go('users')" id="n-users">Пользователи</a>
-  <a onclick="go('settings')" id="n-settings">Настройки</a>
+  <a onclick="go('stickers')" id="n-stickers">Стикеры</a>
+  <a onclick="go('users')" id="n-users">Юзеры</a>
+  <a onclick="go('settings')" id="n-settings">⚙️</a>
   <span class="spacer"></span>
   <span class="logout" onclick="logout()">Выйти</span>
 </nav>
 
 <div class="container page" id="p-dash"><div class="stats" id="statsGrid"></div></div>
 
+<!-- CONTENT -->
 <div class="container page hidden" id="p-content">
   <div class="section">
     <h2>➕ Добавить контент</h2>
     <div class="form-row">
-      <select id="addType"></select>
-      <input id="addCat" placeholder="Категория (myth/trigger_tip)">
+      <div class="form-group"><label>Тип</label><select id="addType"></select></div>
+      <div class="form-group"><label>Категория</label><input id="addCat" placeholder="stress, boredom..."></div>
     </div>
-    <textarea id="addText" placeholder="Текст (HTML)"></textarea>
+    <div class="form-group"><label>Текст (HTML)</label><textarea id="addText" placeholder="Текст сообщения..."></textarea></div>
     <button class="btn btn-p" onclick="addContent()">Добавить</button>
   </div>
   <div class="section">
     <h2>📝 Контент <span class="cnt" id="cCnt"></span></h2>
     <div class="tab-bar" id="cTabs"></div>
-    <table><thead><tr><th>ID</th><th>Тип</th><th>Кат.</th><th>Текст</th><th>Акт.</th><th></th></tr></thead>
-    <tbody id="cBody"></tbody></table>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Тип</th><th>Кат.</th><th>Текст</th><th>Акт.</th><th></th></tr></thead>
+    <tbody id="cBody"></tbody></table></div>
   </div>
 </div>
 
+<!-- MATERIALS -->
 <div class="container page hidden" id="p-materials">
   <div class="section">
     <h2>➕ Материал</h2>
     <div class="form-row">
-      <input id="mTitle" placeholder="Название">
-      <input id="mUrl" placeholder="URL">
+      <div class="form-group"><label>Название</label><input id="mTitle" placeholder="Книга / Видео / Статья"></div>
+      <div class="form-group"><label>URL</label><input id="mUrl" placeholder="https://..."></div>
     </div>
     <div class="form-row">
-      <input id="mDesc" placeholder="Описание">
-      <select id="mCat"><option value="general">Общее</option><option value="book">Книги</option><option value="video">Видео</option><option value="article">Статьи</option><option value="app">Приложения</option><option value="community">Сообщества</option></select>
+      <div class="form-group"><label>Описание</label><input id="mDesc" placeholder="Краткое описание"></div>
+      <div class="form-group"><label>Категория</label>
+        <select id="mCat"><option value="general">Общее</option><option value="book">Книги</option><option value="video">Видео</option><option value="article">Статьи</option><option value="app">Приложения</option><option value="community">Сообщества</option></select>
+      </div>
     </div>
     <button class="btn btn-p" onclick="addMat()">Добавить</button>
   </div>
   <div class="section">
     <h2>📚 Материалы <span class="cnt" id="mCnt"></span></h2>
-    <table><thead><tr><th>ID</th><th>Название</th><th>URL</th><th>Описание</th><th>Кат.</th><th>Акт.</th><th></th></tr></thead>
-    <tbody id="mBody"></tbody></table>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Название</th><th>URL</th><th>Описание</th><th>Кат.</th><th>Акт.</th><th></th></tr></thead>
+    <tbody id="mBody"></tbody></table></div>
   </div>
 </div>
 
+<!-- STICKERS -->
+<div class="container page hidden" id="p-stickers">
+  <div class="section">
+    <h2>🎭 Добавить стикер/мем</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Sticker file_id</label><input id="sFileId" placeholder="CAACAgIAAxkBAAI..."></div>
+      <div class="form-group"><label>Контекст</label>
+        <select id="sCtx"><option value="any">Любой</option><option value="sos">SOS / тяга</option><option value="victory">Победа</option><option value="motivation">Мотивация</option><option value="checkin">Чекин</option><option value="relapse">Срыв</option><option value="funny">Мем</option></select>
+      </div>
+    </div>
+    <button class="btn btn-p" onclick="addSticker()">Добавить</button>
+    <p style="margin-top:8px;font-size:12px;color:var(--muted)">Совет: отправь стикер боту — он покажет file_id. Или используй /stickerid</p>
+  </div>
+  <div class="section">
+    <h2>🎭 Стикеры <span class="cnt" id="sCnt"></span></h2>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>file_id</th><th>Контекст</th><th>Акт.</th><th></th></tr></thead>
+    <tbody id="sBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- USERS -->
 <div class="container page hidden" id="p-users">
   <div class="section">
     <h2>👥 Пользователи <span class="cnt" id="uCnt"></span></h2>
-    <table><thead><tr><th>ID</th><th>TG ID</th><th>Имя</th><th>Устройство</th><th>Дата отказа</th><th>Дней</th><th></th></tr></thead>
-    <tbody id="uBody"></tbody></table>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>TG ID</th><th>Имя</th><th>Устр.</th><th>Дата</th><th>Дней</th><th></th></tr></thead>
+    <tbody id="uBody"></tbody></table></div>
   </div>
 </div>
 
+<!-- SETTINGS -->
 <div class="container page hidden" id="p-settings">
   <div class="section">
     <h2>🔑 Сменить пароль</h2>
-    <div class="form-row"><input id="oldPw" type="password" placeholder="Текущий пароль"></div>
-    <div class="form-row"><input id="newPw" type="password" placeholder="Новый пароль"></div>
+    <div class="form-group"><label>Текущий пароль</label><input id="oldPw" type="password"></div>
+    <div class="form-group"><label>Новый пароль</label><input id="newPw" type="password"></div>
     <button class="btn btn-p" onclick="changePw()">Сменить</button>
     <div class="err" id="pwErr"></div>
   </div>
@@ -149,183 +216,79 @@ textarea,.ta{width:100%;padding:10px;border:1px solid var(--border);border-radiu
 const API=location.origin+'/api';
 let tk=localStorage.getItem('qs_tk')||'';
 const TYPES=['motivation','myth','sos_rational','sos_switching','sos_celebrating','trigger_tip','health_fact','cbt_technique','mindfulness','checkin_morning','checkin_evening'];
+const CTXS=['any','sos','victory','motivation','checkin','relapse','funny'];
 
 const h=()=>({Authorization:'Bearer '+tk,'Content-Type':'application/json'});
 async function api(m,p,b){const o={method:m,headers:h()};if(b)o.body=JSON.stringify(b);const r=await fetch(API+p,o);if(r.status===401){logout();throw new Error('unauth');}return r.json();}
-
 function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2500);}
-function strip(s){return(s||'').replace(/<[^>]+>/g,'').slice(0,80);}
+function strip(s){return(s||'').replace(/<[^>]+>/g,'').slice(0,60);}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// AUTH
 async function doLogin(){
-  const login=document.getElementById('loginUser').value.trim();
-  const password=document.getElementById('loginPass').value;
+  const login=document.getElementById('loginUser').value.trim(),password=document.getElementById('loginPass').value;
   const err=document.getElementById('loginErr');
   if(!login||!password){err.textContent='Введите логин и пароль';return;}
-  try{
-    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login,password})});
-    const d=await r.json();
-    if(d.token){tk=d.token;localStorage.setItem('qs_tk',tk);showApp();}
-    else{err.textContent=d.error||'Ошибка';}
-  }catch(e){err.textContent='Ошибка сети';}
+  try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login,password})});const d=await r.json();
+  if(d.token){tk=d.token;localStorage.setItem('qs_tk',tk);showApp();}else{err.textContent=d.error||'Ошибка';}}catch(e){err.textContent='Ошибка сети';}
 }
 function logout(){tk='';localStorage.removeItem('qs_tk');document.getElementById('app').style.display='none';document.getElementById('loginWrap').style.display='flex';}
 function showApp(){document.getElementById('loginWrap').style.display='none';document.getElementById('app').style.display='block';go('dash');}
 
-// NAV
-function go(p){
-  document.querySelectorAll('.page').forEach(e=>e.classList.add('hidden'));
-  document.getElementById('p-'+p)?.classList.remove('hidden');
-  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
-  document.getElementById('n-'+p)?.classList.add('active');
-  if(p==='dash')loadDash();if(p==='content')loadContent();if(p==='materials')loadMats();if(p==='users')loadUsers();
-}
+function go(p){document.querySelectorAll('.page').forEach(e=>e.classList.add('hidden'));document.getElementById('p-'+p)?.classList.remove('hidden');document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));document.getElementById('n-'+p)?.classList.add('active');
+({dash:loadDash,content:loadContent,materials:loadMats,stickers:loadStickers,users:loadUsers})[p]?.();}
 
-// DASHBOARD
 async function loadDash(){
-  try{
-    const[st,ct]=await Promise.all([api('GET','/users/stats'),api('GET','/content')]);
-    const types={};(ct.items||[]).forEach(c=>{types[c.type]=(types[c.type]||0)+1;});
-    document.getElementById('statsGrid').innerHTML=
-      `<div class="stat-card"><div class="num">${st.total||0}</div><div class="label">Всего пользователей</div></div>`+
-      `<div class="stat-card"><div class="num">${st.active||0}</div><div class="label">Активных</div></div>`+
-      `<div class="stat-card"><div class="num">${ct.total||0}</div><div class="label">Единиц контента</div></div>`+
-      Object.entries(types).map(([t,n])=>`<div class="stat-card"><div class="num">${n}</div><div class="label">${t}</div></div>`).join('');
-  }catch(e){}
-}
+  try{const[st,ct,sk]=await Promise.all([api('GET','/users/stats'),api('GET','/content'),api('GET','/stickers')]);
+  const types={};(ct.items||[]).forEach(c=>{types[c.type]=(types[c.type]||0)+1;});
+  document.getElementById('statsGrid').innerHTML=
+    `<div class="stat-card"><div class="num">${st.total||0}</div><div class="label">Пользователей</div></div>`+
+    `<div class="stat-card"><div class="num">${st.active||0}</div><div class="label">Активных</div></div>`+
+    `<div class="stat-card"><div class="num">${ct.total||0}</div><div class="label">Контента</div></div>`+
+    `<div class="stat-card"><div class="num">${sk.total||0}</div><div class="label">Стикеров</div></div>`+
+    Object.entries(types).map(([t,n])=>`<div class="stat-card"><div class="num">${n}</div><div class="label">${t}</div></div>`).join('');
+  }catch(e){}}
 
-// CONTENT
 let cFilter='';
 async function loadContent(){
-  const sel=document.getElementById('addType');
-  if(!sel.options.length)TYPES.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;sel.appendChild(o);});
-  const d=await api('GET','/content'+(cFilter?'?type='+cFilter:''));
-  const items=d.items||[];
+  const sel=document.getElementById('addType');if(!sel.options.length)TYPES.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;sel.appendChild(o);});
+  const d=await api('GET','/content'+(cFilter?'?type='+cFilter:''));const items=d.items||[];
   document.getElementById('cCnt').textContent=items.length;
   const types=[...new Set(items.map(i=>i.type))].sort();
-  document.getElementById('cTabs').innerHTML=
-    `<div class="t ${!cFilter?'on':''}" onclick="cFilter='';loadContent()">Все</div>`+
-    types.map(t=>`<div class="t ${cFilter===t?'on':''}" onclick="cFilter='${t}';loadContent()">${t} (${items.filter(i=>i.type===t).length})</div>`).join('');
-  document.getElementById('cBody').innerHTML=items.slice(0,200).map(c=>
-    `<tr><td>${c.id}</td><td><span class="badge">${c.type}</span></td><td>${c.category||'—'}</td><td>${strip(c.text)}…</td>`+
-    `<td>${c.active?'✅':'❌'}</td>`+
-    `<td><button class="btn btn-w" onclick="editContent(${c.id})">✎</button> <button class="btn btn-d" onclick="delContent(${c.id})">✕</button></td></tr>`
-  ).join('');
+  document.getElementById('cTabs').innerHTML=`<div class="t ${!cFilter?'on':''}" onclick="cFilter='';loadContent()">Все</div>`+types.map(t=>`<div class="t ${cFilter===t?'on':''}" onclick="cFilter='${t}';loadContent()">${t} (${items.filter(i=>i.type===t).length})</div>`).join('');
+  document.getElementById('cBody').innerHTML=items.slice(0,200).map(c=>`<tr><td>${c.id}</td><td><span class="badge">${c.type}</span></td><td>${c.category||'—'}</td><td class="text-cell">${strip(c.text)}</td><td>${c.active?'✅':'❌'}</td><td><button class="btn btn-w btn-sm" onclick="editContent(${c.id})">✎</button> <button class="btn btn-d btn-sm" onclick="delContent(${c.id})">✕</button></td></tr>`).join('');
 }
-async function addContent(){
-  const type=document.getElementById('addType').value,cat=document.getElementById('addCat').value.trim(),text=document.getElementById('addText').value.trim();
-  if(!text)return;await api('POST','/content',{type,category:cat,text});document.getElementById('addText').value='';document.getElementById('addCat').value='';toast('Добавлено!');loadContent();
-}
+async function addContent(){const type=document.getElementById('addType').value,cat=document.getElementById('addCat').value.trim(),text=document.getElementById('addText').value.trim();if(!text)return;await api('POST','/content',{type,category:cat,text});document.getElementById('addText').value='';document.getElementById('addCat').value='';toast('Добавлено!');loadContent();}
 async function delContent(id){if(!confirm('Удалить #'+id+'?'))return;await api('DELETE','/content/'+id);toast('Удалено');loadContent();}
-async function editContent(id){
-  const d=await api('GET','/content');const c=(d.items||[]).find(i=>i.id===id);if(!c)return;
-  showModal('Редактировать контент #'+id,`
-    <label>Тип</label><select class="inp" id="ed_type">${TYPES.map(t=>`<option ${t===c.type?'selected':''}>${t}</option>`).join('')}</select>
-    <label>Категория</label><input class="inp" id="ed_cat" value="${c.category||''}">
-    <label>Текст</label><textarea class="ta" id="ed_text">${esc(c.text)}</textarea>
-    <label>Активен</label><select class="inp" id="ed_active"><option value="1" ${c.active?'selected':''}>Да</option><option value="0" ${!c.active?'selected':''}>Нет</option></select>
-  `,async()=>{
-    await api('PUT','/content/'+id,{text:document.getElementById('ed_text').value,category:document.getElementById('ed_cat').value,active:document.getElementById('ed_active').value==='1'});
-    closeModal();toast('Обновлено');loadContent();
-  });
-}
+async function editContent(id){const d=await api('GET','/content');const c=(d.items||[]).find(i=>i.id===id);if(!c)return;
+showModal('Контент #'+id,`<div class="form-group"><label>Тип</label><select class="inp" id="ed_type">${TYPES.map(t=>`<option ${t===c.type?'selected':''}>${t}</option>`).join('')}</select></div><div class="form-group"><label>Категория</label><input class="inp" id="ed_cat" value="${c.category||''}"></div><div class="form-group"><label>Текст</label><textarea class="ta" id="ed_text">${esc(c.text)}</textarea></div><div class="form-group"><label>Активен</label><select class="inp" id="ed_active"><option value="1" ${c.active?'selected':''}>Да</option><option value="0" ${!c.active?'selected':''}>Нет</option></select></div>`,async()=>{await api('PUT','/content/'+id,{text:document.getElementById('ed_text').value,category:document.getElementById('ed_cat').value,active:document.getElementById('ed_active').value==='1'});closeModal();toast('Обновлено');loadContent();});}
 
-// MATERIALS
-async function loadMats(){
-  const items=await api('GET','/materials/all');
-  const arr=Array.isArray(items)?items:[];
-  document.getElementById('mCnt').textContent=arr.length;
-  document.getElementById('mBody').innerHTML=arr.map(m=>
-    `<tr><td>${m.id}</td><td>${m.title}</td><td><a href="${m.url}" target="_blank">${m.url.slice(0,35)}…</a></td><td>${m.description||'—'}</td><td>${m.category}</td>`+
-    `<td>${m.active?'✅':'❌'}</td>`+
-    `<td><button class="btn btn-w" onclick="editMat(${m.id})">✎</button> <button class="btn btn-d" onclick="delMat(${m.id})">✕</button></td></tr>`
-  ).join('');
-}
-async function addMat(){
-  const title=document.getElementById('mTitle').value.trim(),url=document.getElementById('mUrl').value.trim(),desc=document.getElementById('mDesc').value.trim(),cat=document.getElementById('mCat').value;
-  if(!title||!url)return;await api('POST','/materials',{title,url,description:desc,category:cat});
-  document.getElementById('mTitle').value='';document.getElementById('mUrl').value='';document.getElementById('mDesc').value='';toast('Добавлено!');loadMats();
-}
+async function loadMats(){const items=await api('GET','/materials/all');const arr=Array.isArray(items)?items:[];document.getElementById('mCnt').textContent=arr.length;
+document.getElementById('mBody').innerHTML=arr.map(m=>`<tr><td>${m.id}</td><td>${m.title}</td><td><a href="${m.url}" target="_blank">${m.url.slice(0,30)}…</a></td><td>${m.description||'—'}</td><td>${m.category}</td><td>${m.active?'✅':'❌'}</td><td><button class="btn btn-w btn-sm" onclick="editMat(${m.id})">✎</button> <button class="btn btn-d btn-sm" onclick="delMat(${m.id})">✕</button></td></tr>`).join('');}
+async function addMat(){const title=document.getElementById('mTitle').value.trim(),url=document.getElementById('mUrl').value.trim(),desc=document.getElementById('mDesc').value.trim(),cat=document.getElementById('mCat').value;if(!title||!url)return;await api('POST','/materials',{title,url,description:desc,category:cat});document.getElementById('mTitle').value='';document.getElementById('mUrl').value='';document.getElementById('mDesc').value='';toast('Добавлено!');loadMats();}
 async function delMat(id){if(!confirm('Удалить #'+id+'?'))return;await api('DELETE','/materials/'+id);toast('Удалено');loadMats();}
-async function editMat(id){
-  const items=await api('GET','/materials/all');const m=(Array.isArray(items)?items:[]).find(i=>i.id===id);if(!m)return;
-  const cats=['general','book','video','article','app','community'];
-  showModal('Редактировать материал #'+id,`
-    <label>Название</label><input class="inp" id="em_title" value="${esc(m.title)}">
-    <label>URL</label><input class="inp" id="em_url" value="${esc(m.url)}">
-    <label>Описание</label><input class="inp" id="em_desc" value="${esc(m.description)}">
-    <label>Категория</label><select class="inp" id="em_cat">${cats.map(c=>`<option ${c===m.category?'selected':''}>${c}</option>`).join('')}</select>
-    <label>Активен</label><select class="inp" id="em_active"><option value="1" ${m.active?'selected':''}>Да</option><option value="0" ${!m.active?'selected':''}>Нет</option></select>
-  `,async()=>{
-    await api('PUT','/materials/'+id,{title:document.getElementById('em_title').value,url:document.getElementById('em_url').value,description:document.getElementById('em_desc').value,category:document.getElementById('em_cat').value,active:document.getElementById('em_active').value==='1'});
-    closeModal();toast('Обновлено');loadMats();
-  });
-}
+async function editMat(id){const items=await api('GET','/materials/all');const m=(Array.isArray(items)?items:[]).find(i=>i.id===id);if(!m)return;const cats=['general','book','video','article','app','community'];
+showModal('Материал #'+id,`<div class="form-group"><label>Название</label><input class="inp" id="em_title" value="${esc(m.title)}"></div><div class="form-group"><label>URL</label><input class="inp" id="em_url" value="${esc(m.url)}"></div><div class="form-group"><label>Описание</label><input class="inp" id="em_desc" value="${esc(m.description)}"></div><div class="form-row"><div class="form-group"><label>Категория</label><select class="inp" id="em_cat">${cats.map(c=>`<option ${c===m.category?'selected':''}>${c}</option>`).join('')}</select></div><div class="form-group"><label>Активен</label><select class="inp" id="em_active"><option value="1" ${m.active?'selected':''}>Да</option><option value="0" ${!m.active?'selected':''}>Нет</option></select></div></div>`,async()=>{await api('PUT','/materials/'+id,{title:document.getElementById('em_title').value,url:document.getElementById('em_url').value,description:document.getElementById('em_desc').value,category:document.getElementById('em_cat').value,active:document.getElementById('em_active').value==='1'});closeModal();toast('Обновлено');loadMats();});}
 
-// USERS
-async function loadUsers(){
-  const items=await api('GET','/users');
-  const arr=Array.isArray(items)?items:[];
-  document.getElementById('uCnt').textContent=arr.length;
-  document.getElementById('uBody').innerHTML=arr.map(u=>{
-    const days=u.quit_date?Math.floor((Date.now()-new Date(u.quit_date).getTime())/864e5):0;
-    return `<tr><td>${u.id}</td><td>${u.telegram_id}</td><td>${u.first_name||u.username||'—'}</td><td>${u.device_type}</td>`+
-      `<td>${u.quit_date?u.quit_date.slice(0,10):'—'}</td><td>${days}</td>`+
-      `<td><button class="btn btn-w" onclick="editUser(${u.id})">✎</button> <button class="btn btn-d" onclick="delUser(${u.id})">✕</button></td></tr>`;
-  }).join('');
-}
-async function delUser(id){if(!confirm('Удалить пользователя #'+id+'? Все данные будут потеряны.'))return;await api('DELETE','/users/'+id);toast('Удалено');loadUsers();}
-async function editUser(id){
-  const u=await api('GET','/users/'+id);if(!u||u.error)return;
-  const devs=['cigarettes','iqos','vape','mini_vape'];
-  showModal('Пользователь #'+id+' (TG: '+u.telegram_id+')',`
-    <label>Устройство</label><select class="inp" id="eu_dev">${devs.map(d=>`<option ${d===u.device_type?'selected':''}>${d}</option>`).join('')}</select>
-    <label>Единиц/день</label><input class="inp" id="eu_units" type="number" value="${u.units_per_day}">
-    <label>Цена</label><input class="inp" id="eu_price" type="number" value="${u.price_per_pack}">
-    <label>В упаковке</label><input class="inp" id="eu_pack" type="number" value="${u.units_in_pack}">
-    <label>Никотин мг/мл</label><input class="inp" id="eu_nic" type="number" value="${u.nicotine_mg}">
-    <label>Лет использования</label><input class="inp" id="eu_years" type="number" value="${u.years_smoking}">
-    <label>Часовой пояс (UTC offset)</label><input class="inp" id="eu_tz" type="number" value="${u.timezone_offset}">
-    <label>Мотивация</label><input class="inp" id="eu_mot" value="${esc(u.motivation)}">
-    <label>Дата отказа (ISO)</label><input class="inp" id="eu_quit" value="${u.quit_date||''}">
-    <label>Онбординг пройден</label><select class="inp" id="eu_onb"><option value="1" ${u.onboarding_done?'selected':''}>Да</option><option value="0" ${!u.onboarding_done?'selected':''}>Нет</option></select>
-  `,async()=>{
-    await api('PUT','/users/'+id,{
-      device_type:document.getElementById('eu_dev').value,
-      units_per_day:+document.getElementById('eu_units').value,
-      price_per_pack:+document.getElementById('eu_price').value,
-      units_in_pack:+document.getElementById('eu_pack').value,
-      nicotine_mg:+document.getElementById('eu_nic').value,
-      years_smoking:+document.getElementById('eu_years').value,
-      timezone_offset:+document.getElementById('eu_tz').value,
-      motivation:document.getElementById('eu_mot').value,
-      quit_date:document.getElementById('eu_quit').value||null,
-      onboarding_done:+document.getElementById('eu_onb').value,
-    });
-    closeModal();toast('Обновлено');loadUsers();
-  });
-}
+async function loadStickers(){const d=await api('GET','/stickers');const items=d.items||[];document.getElementById('sCnt').textContent=items.length;
+document.getElementById('sBody').innerHTML=items.map(s=>`<tr><td>${s.id}</td><td class="text-cell" style="font-size:11px;font-family:monospace">${s.file_id.slice(0,30)}…</td><td><span class="badge">${s.context}</span></td><td>${s.active?'✅':'❌'}</td><td><button class="btn btn-w btn-sm" onclick="editSticker(${s.id})">✎</button> <button class="btn btn-d btn-sm" onclick="delSticker(${s.id})">✕</button></td></tr>`).join('');}
+async function addSticker(){const fid=document.getElementById('sFileId').value.trim(),ctx=document.getElementById('sCtx').value;if(!fid)return;await api('POST','/stickers',{file_id:fid,context:ctx});document.getElementById('sFileId').value='';toast('Стикер добавлен!');loadStickers();}
+async function delSticker(id){if(!confirm('Удалить стикер #'+id+'?'))return;await api('DELETE','/stickers/'+id);toast('Удалено');loadStickers();}
+async function editSticker(id){const d=await api('GET','/stickers');const s=(d.items||[]).find(i=>i.id===id);if(!s)return;
+showModal('Стикер #'+id,`<div class="form-group"><label>file_id</label><input class="inp" id="es_fid" value="${esc(s.file_id)}"></div><div class="form-row"><div class="form-group"><label>Контекст</label><select class="inp" id="es_ctx">${CTXS.map(c=>`<option ${c===s.context?'selected':''}>${c}</option>`).join('')}</select></div><div class="form-group"><label>Активен</label><select class="inp" id="es_active"><option value="1" ${s.active?'selected':''}>Да</option><option value="0" ${!s.active?'selected':''}>Нет</option></select></div></div>`,async()=>{await api('PUT','/stickers/'+id,{context:document.getElementById('es_ctx').value,active:document.getElementById('es_active').value==='1'});closeModal();toast('Обновлено');loadStickers();});}
 
-// PASSWORD
-async function changePw(){
-  const old_password=document.getElementById('oldPw').value,new_password=document.getElementById('newPw').value;
-  const err=document.getElementById('pwErr');
-  if(!old_password||!new_password){err.textContent='Заполните оба поля';return;}
-  try{const r=await api('POST','/auth/password',{old_password,new_password});if(r.ok){toast('Пароль изменён');document.getElementById('oldPw').value='';document.getElementById('newPw').value='';err.textContent='';}else{err.textContent=r.error;}}
-  catch(e){err.textContent='Ошибка';}
-}
+async function loadUsers(){const items=await api('GET','/users');const arr=Array.isArray(items)?items:[];document.getElementById('uCnt').textContent=arr.length;
+document.getElementById('uBody').innerHTML=arr.map(u=>{const days=u.quit_date?Math.floor((Date.now()-new Date(u.quit_date).getTime())/864e5):0;
+return`<tr><td>${u.id}</td><td>${u.telegram_id}</td><td>${u.first_name||u.username||'—'}</td><td>${u.device_type}</td><td>${u.quit_date?u.quit_date.slice(0,10):'—'}</td><td>${days}</td><td><button class="btn btn-w btn-sm" onclick="editUser(${u.id})">✎</button> <button class="btn btn-d btn-sm" onclick="delUser(${u.id})">✕</button></td></tr>`;}).join('');}
+async function delUser(id){if(!confirm('Удалить пользователя #'+id+'?'))return;await api('DELETE','/users/'+id);toast('Удалено');loadUsers();}
+async function editUser(id){const u=await api('GET','/users/'+id);if(!u||u.error)return;const devs=['cigarettes','iqos','vape','mini_vape'];
+showModal('Юзер #'+id+' (TG: '+u.telegram_id+')',`<div class="form-row"><div class="form-group"><label>Устройство</label><select class="inp" id="eu_dev">${devs.map(d=>`<option ${d===u.device_type?'selected':''}>${d}</option>`).join('')}</select></div><div class="form-group"><label>Единиц/день</label><input class="inp" id="eu_units" type="number" value="${u.units_per_day}"></div></div><div class="form-row"><div class="form-group"><label>Цена</label><input class="inp" id="eu_price" type="number" value="${u.price_per_pack}"></div><div class="form-group"><label>В упаковке</label><input class="inp" id="eu_pack" type="number" value="${u.units_in_pack}"></div></div><div class="form-row"><div class="form-group"><label>Никотин мг/мл</label><input class="inp" id="eu_nic" type="number" value="${u.nicotine_mg}"></div><div class="form-group"><label>Лет курения</label><input class="inp" id="eu_years" type="number" value="${u.years_smoking}"></div></div><div class="form-row"><div class="form-group"><label>UTC offset</label><input class="inp" id="eu_tz" type="number" value="${u.timezone_offset}"></div><div class="form-group"><label>Онбординг</label><select class="inp" id="eu_onb"><option value="1" ${u.onboarding_done?'selected':''}>Да</option><option value="0" ${!u.onboarding_done?'selected':''}>Нет</option></select></div></div><div class="form-group"><label>Мотивация</label><input class="inp" id="eu_mot" value="${esc(u.motivation)}"></div><div class="form-group"><label>Дата отказа (ISO)</label><input class="inp" id="eu_quit" value="${u.quit_date||''}"></div>`,async()=>{await api('PUT','/users/'+id,{device_type:document.getElementById('eu_dev').value,units_per_day:+document.getElementById('eu_units').value,price_per_pack:+document.getElementById('eu_price').value,units_in_pack:+document.getElementById('eu_pack').value,nicotine_mg:+document.getElementById('eu_nic').value,years_smoking:+document.getElementById('eu_years').value,timezone_offset:+document.getElementById('eu_tz').value,motivation:document.getElementById('eu_mot').value,quit_date:document.getElementById('eu_quit').value||null,onboarding_done:+document.getElementById('eu_onb').value});closeModal();toast('Обновлено');loadUsers();});}
 
-// MODAL
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function showModal(title,body,onSave){
-  const w=document.getElementById('modalWrap');
-  w.className='modal-bg';
-  w.innerHTML=`<div class="modal"><h3>${title}</h3>${body}<div style="margin-top:16px;display:flex;gap:8px"><button class="btn btn-s" id="modalSave">Сохранить</button><button class="btn btn-d" onclick="closeModal()">Отмена</button></div></div>`;
-  document.getElementById('modalSave').onclick=onSave;
-}
+async function changePw(){const old_password=document.getElementById('oldPw').value,new_password=document.getElementById('newPw').value;const err=document.getElementById('pwErr');if(!old_password||!new_password){err.textContent='Заполните оба поля';return;}
+try{const r=await api('POST','/auth/password',{old_password,new_password});if(r.ok){toast('Пароль изменён');document.getElementById('oldPw').value='';document.getElementById('newPw').value='';err.textContent='';}else{err.textContent=r.error;}}catch(e){err.textContent='Ошибка';}}
+
+function showModal(title,body,onSave){const w=document.getElementById('modalWrap');w.className='modal-bg';w.innerHTML=`<div class="modal"><h3>${title}</h3>${body}<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-s" id="modalSave">Сохранить</button><button class="btn btn-d" onclick="closeModal()">Отмена</button></div></div>`;document.getElementById('modalSave').onclick=onSave;}
 function closeModal(){document.getElementById('modalWrap').className='hidden';document.getElementById('modalWrap').innerHTML='';}
 
-// INIT
 if(tk){api('GET','/users/stats').then(d=>{if(d.error)logout();else showApp();}).catch(()=>logout());}
 else document.getElementById('loginWrap').style.display='flex';
 </script>

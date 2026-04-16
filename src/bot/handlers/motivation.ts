@@ -4,6 +4,7 @@ import { mainMenuKb } from '../keyboards/main.js';
 import { getUser } from '../../services/user.js';
 import { getContentForUser } from '../../services/content.js';
 import { calcProgress } from '../../services/progress.js';
+import { maybeSendMeme } from '../../services/memeHelper.js';
 
 export function motivationHandlers(bot: Bot<BotContext>) {
   bot.hears('💡 Мотивация', async (ctx) => {
@@ -13,16 +14,17 @@ export function motivationHandlers(bot: Bot<BotContext>) {
     const c = getContentForUser(user.id, 'motivation');
     const p = calcProgress(user);
 
-    let text = `💡 <b>Напоминание</b>\n\n${c?.text || 'Ты свободен! 🔓'}\n`;
+    let text = `💡 <b>Ловите мудрость</b>\n\n${c?.text || 'Ты свободен! 🔓'}\n`;
 
     if (user.motivation) {
-      text += `\n💭 <b>Твоя причина:</b>\n<i>«${user.motivation}»</i>\n`;
+      text += `\n💭 <b>Твоя причина:</b> <i>«${user.motivation}»</i>\n`;
     }
 
-    text += `\n🔓 Свободен: <b>${p.smokeFreeDays}</b> дн.\n` +
-      `🚫 Не впустил: <b>${p.unitsAvoided}</b> ${p.deviceLabel}\n` +
-      `💰 Не отдал: <b>${p.moneySaved.toLocaleString('ru')}₽</b>`;
+    text += `\n🔓 Свободен: <b>${p.smokeFreeDays}</b> дн. | ` +
+      `🚫 <b>${p.unitsAvoided}</b> ${p.deviceLabel} | ` +
+      `💰 <b>${p.moneySaved.toLocaleString('ru')}₽</b>`;
 
     await ctx.reply(text, { parse_mode: 'HTML', reply_markup: mainMenuKb() });
+    await maybeSendMeme(ctx, 'motivation', 0.35);
   });
 }

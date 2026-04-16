@@ -9,6 +9,7 @@ import { usersRoutes } from './routes/users.js';
 import { progressRoutes } from './routes/progress.js';
 import { contentRoutes } from './routes/content.js';
 import { materialsRoutes } from './routes/materials.js';
+import { stickersRoutes } from './routes/stickers.js';
 
 export async function createApi() {
   const app = Fastify({ logger: false });
@@ -40,6 +41,7 @@ export async function createApi() {
   await app.register(progressRoutes, { prefix: '/api/progress' });
   await app.register(contentRoutes, { prefix: '/api/content' });
   await app.register(materialsRoutes, { prefix: '/api/materials' });
+  await app.register(stickersRoutes, { prefix: '/api/stickers' });
 
   return app;
 }

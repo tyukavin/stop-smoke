@@ -1,11 +1,16 @@
 import type { Bot } from 'grammy';
 import type { BotContext } from '../index.js';
 import { mainMenuKb, deviceTypeKb, confirmKb } from '../keyboards/main.js';
-import { createUser, getUser, updateUser } from '../../services/user.js';
+import { createUser, getUser, updateUser, getActiveUserCount } from '../../services/user.js';
+import { config } from '../../config.js';
 import type { DeviceType } from '../../types/index.js';
 import { DEVICE_UNIT_LABELS } from '../../types/index.js';
 
 export function onboardingHandlers(bot: Bot<BotContext>) {
+  bot.command('myid', async (ctx) => {
+    await ctx.reply(`Твой Telegram ID: <code>${ctx.from!.id}</code>`, { parse_mode: 'HTML' });
+  });
+
   bot.command('start', async (ctx) => {
     const tgUser = ctx.from!;
     const user = getUser(tgUser.id);
@@ -18,7 +23,11 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
       return;
     }
 
-    createUser(tgUser.id, tgUser.username, tgUser.first_name);
+    const created = createUser(tgUser.id, tgUser.username, tgUser.first_name);
+    // Auto-promote to admin if ADMIN_IDS includes this user, or if this is the very first user
+    if (config.adminIds.includes(tgUser.id) || getActiveUserCount() === 0) {
+      updateUser(tgUser.id, { is_admin: 1 });
+    }
 
     await ctx.reply(
       '🔓 <b>Добро пожаловать в «Лёгкий способ»!</b>\n\n' +

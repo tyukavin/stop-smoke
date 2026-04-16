@@ -2,11 +2,11 @@ import { InlineKeyboard, Keyboard } from 'grammy';
 
 export function mainMenuKb() {
   return new Keyboard()
-    .text('🔓 Моя свобода').text('🏥 Здоровье').row()
-    .text('🆘 Чудовище атакует!').text('🏆 Достижения').row()
-    .text('💰 Экономия').text('🎭 Мифы').row()
-    .text('💡 Мотивация').text('📚 Материалы').row()
-    .text('⚙️ Настройки')
+    .text('🔓 Моя свобода').text('📸 Моя карточка').row()
+    .text('🆘 Чудовище атакует!').text('🏥 Здоровье').row()
+    .text('🏆 Достижения').text('🎭 Мифы').row()
+    .text('💰 Экономия').text('💡 Мотивация').row()
+    .text('📚 Материалы').text('⚙️ Настройки')
     .resized();
 }
 

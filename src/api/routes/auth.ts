@@ -1,33 +1,52 @@
 import type { FastifyInstance } from 'fastify';
+import bcrypt from 'bcryptjs';
 import { db } from '../../db/index.js';
-import { config } from '../../config.js';
+
+interface AdminRow {
+  id: number;
+  login: string;
+  password_hash: string;
+  name: string;
+}
 
 export async function authRoutes(app: FastifyInstance) {
-  // Admin login by telegram_id (must be in ADMIN_IDS or is_admin=1)
-  app.post<{ Body: { telegram_id: number } }>('/login', async (request, reply) => {
-    const { telegram_id } = request.body || {};
-    if (!telegram_id) return reply.status(400).send({ error: 'telegram_id required' });
+  // Admin login by login + password
+  app.post<{ Body: { login: string; password: string } }>('/login', async (request, reply) => {
+    const { login, password } = request.body || {};
+    if (!login || !password) return reply.status(400).send({ error: 'login and password required' });
 
-    const user = db.prepare('SELECT * FROM users WHERE telegram_id = ?').get(telegram_id) as any;
-    const isAdminById = config.adminIds.includes(telegram_id);
+    const admin = db.prepare('SELECT * FROM admins WHERE login = ?').get(login) as AdminRow | undefined;
+    if (!admin) return reply.status(401).send({ error: 'Invalid credentials' });
 
-    if (!user && !isAdminById) {
-      return reply.status(401).send({ error: 'User not found' });
+    if (!bcrypt.compareSync(password, admin.password_hash)) {
+      return reply.status(401).send({ error: 'Invalid credentials' });
     }
 
-    if (!isAdminById && !user?.is_admin) {
-      return reply.status(403).send({ error: 'Not admin. Add your Telegram ID to ADMIN_IDS env var.' });
-    }
-
-    const userId = user?.id || 0;
     const token = app.jwt.sign(
-      { userId, telegramId: telegram_id, admin: true },
+      { adminId: admin.id, login: admin.login, admin: true },
       { expiresIn: '7d' }
     );
-    return { token, user: user || null };
+    return { token, name: admin.name };
   });
 
-  // User token by telegram_id
+  // Change password
+  app.post<{ Body: { old_password: string; new_password: string } }>('/password', async (request, reply) => {
+    try { await request.jwtVerify(); } catch { return reply.status(401).send({ error: 'Unauthorized' }); }
+    const { adminId } = request.user as any;
+    const { old_password, new_password } = request.body || {};
+
+    const admin = db.prepare('SELECT * FROM admins WHERE id = ?').get(adminId) as AdminRow | undefined;
+    if (!admin) return reply.status(404).send({ error: 'Admin not found' });
+    if (!bcrypt.compareSync(old_password, admin.password_hash)) {
+      return reply.status(401).send({ error: 'Wrong old password' });
+    }
+
+    const hash = bcrypt.hashSync(new_password, 10);
+    db.prepare('UPDATE admins SET password_hash = ? WHERE id = ?').run(hash, adminId);
+    return { ok: true };
+  });
+
+  // User API token (for mobile apps)
   app.post<{ Body: { telegram_id: number } }>('/token', async (request, reply) => {
     const { telegram_id } = request.body || {};
     if (!telegram_id) return reply.status(400).send({ error: 'telegram_id required' });
@@ -35,9 +54,8 @@ export async function authRoutes(app: FastifyInstance) {
     const user = db.prepare('SELECT * FROM users WHERE telegram_id = ?').get(telegram_id) as any;
     if (!user) return reply.status(404).send({ error: 'User not found' });
 
-    const isAdmin = !!user.is_admin || config.adminIds.includes(telegram_id);
     const token = app.jwt.sign(
-      { userId: user.id, telegramId: telegram_id, admin: isAdmin },
+      { userId: user.id, telegramId: telegram_id, admin: false },
       { expiresIn: '30d' }
     );
     return { token };

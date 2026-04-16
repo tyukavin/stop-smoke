@@ -24,6 +24,7 @@
     "@fastify/static": "^9.1.1",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.9.0",
+    "canvas": "^3.2.3",
     "dotenv": "^17.4.2",
     "fastify": "^5.8.5",
     "grammy": "^1.42.0",

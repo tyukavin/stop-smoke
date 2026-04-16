@@ -99,5 +99,13 @@ export function initDb() {
       active      INTEGER DEFAULT 1,
       created_at  TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS admins (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      login         TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      name          TEXT DEFAULT '',
+      created_at    TEXT DEFAULT (datetime('now'))
+    );
   `);
 }

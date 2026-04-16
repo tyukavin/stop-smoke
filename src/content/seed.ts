@@ -1,4 +1,5 @@
 import { db } from '../db/index.js';
+import bcrypt from 'bcryptjs';
 
 interface SeedItem { type: string; category?: string; text: string }
 
@@ -216,4 +217,13 @@ export function seedMaterials() {
   });
   tx();
   console.log(`Seeded ${mats.length} materials`);
+}
+
+export function seedAdmin() {
+  const existing = db.prepare('SELECT COUNT(*) as cnt FROM admins').get() as { cnt: number };
+  if (existing.cnt > 0) return;
+
+  const hash = bcrypt.hashSync('admin', 10);
+  db.prepare('INSERT INTO admins (login, password_hash, name) VALUES (?, ?, ?)').run('admin', hash, 'Администратор');
+  console.log('Default admin created (login: admin, password: admin)');
 }

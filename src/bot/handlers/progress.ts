@@ -1,9 +1,11 @@
 import type { Bot } from 'grammy';
+import { InputFile } from 'grammy';
 import type { BotContext } from '../index.js';
 import { mainMenuKb } from '../keyboards/main.js';
 import { getUser } from '../../services/user.js';
 import { calcProgress, formatDuration, formatMinutes } from '../../services/progress.js';
 import { checkAndUnlock, formatAchievement } from '../../services/achievements.js';
+import { generateStatsImage } from '../../services/statsImage.js';
 
 export function progressHandlers(bot: Bot<BotContext>) {
   bot.hears('🔓 Моя свобода', async (ctx) => {
@@ -29,6 +31,27 @@ export function progressHandlers(bot: Bot<BotContext>) {
 
     await ctx.reply(text, { parse_mode: 'HTML', reply_markup: mainMenuKb() });
   });
+
+  // Stats image
+  const sendStatsImage = async (ctx: BotContext) => {
+    const user = getUser(ctx.from!.id);
+    if (!user?.onboarding_done) { await ctx.reply('Сначала /start'); return; }
+
+    await ctx.reply('⏳ Генерирую карточку...');
+    try {
+      const buf = generateStatsImage(user);
+      await ctx.replyWithPhoto(new InputFile(buf, 'stats.png'), {
+        caption: '🔓 Твоя карточка свободы! Поделись достижениями 💪',
+        reply_markup: mainMenuKb(),
+      });
+    } catch (e) {
+      console.error('Stats image error:', e);
+      await ctx.reply('Не удалось сгенерировать картинку, попробуй позже.');
+    }
+  };
+
+  bot.hears('📸 Моя карточка', sendStatsImage);
+  bot.command('stats', sendStatsImage);
 
   bot.hears('💰 Экономия', async (ctx) => {
     const user = getUser(ctx.from!.id);

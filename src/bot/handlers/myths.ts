@@ -25,13 +25,22 @@ export function mythsHandlers(bot: Bot<BotContext>) {
   bot.hears('🎭 Мифы', showMenu);
   bot.command('myth', showMenu);
 
-  // Back to myths menu — replace current message with category list
+  // Back to myths menu — new message under the myth so the myth text stays in chat
   bot.callbackQuery('myths_menu', async (ctx) => {
-    await ctx.editMessageText(MYTH_MENU_TEXT, { parse_mode: 'HTML', reply_markup: mythCategoriesKb() });
+    const mid = ctx.callbackQuery?.message?.message_id;
+    try {
+      await ctx.editMessageReplyMarkup({ reply_markup: { inline_keyboard: [] } });
+    } catch { /* ignore if already edited */ }
+    await ctx.reply(MYTH_MENU_TEXT, {
+      parse_mode: 'HTML',
+      reply_markup: mythCategoriesKb(),
+      ...(mid !== undefined ? { reply_to_message_id: mid } : {}),
+    });
     await ctx.answerCallbackQuery();
   });
 
-  // Category selected — strip buttons from current message, send new message with myth
+  // Category (or random from menu): replace the menu message with the myth.
+  // Random from a myth message: keep the myth, send a new message (only myth_random is on myth kb).
   bot.callbackQuery(/^myth_(.+)$/, async (ctx) => {
     const category = ctx.match![1];
     const user = getUser(ctx.from!.id);
@@ -43,13 +52,27 @@ export function mythsHandlers(bot: Bot<BotContext>) {
 
     const mythText = c?.text || '💪 Все мифы в этой категории уже разрушены! Попробуй другую.';
 
-    // Remove buttons from the old message, keep text in history
-    try {
-      await ctx.editMessageReplyMarkup({ reply_markup: { inline_keyboard: [] } });
-    } catch { /* ignore if already edited */ }
+    const msg = ctx.callbackQuery?.message;
+    const isMythMenuMessage =
+      msg &&
+      'text' in msg &&
+      typeof msg.text === 'string' &&
+      msg.text.includes('Убийца мифов') &&
+      msg.text.includes('Выбери категорию');
 
-    // Send myth as a new message with action buttons
-    await ctx.reply(mythText, { parse_mode: 'HTML', reply_markup: mythResultKb() });
+    if (category !== 'random' || isMythMenuMessage) {
+      try {
+        await ctx.editMessageText(mythText, { parse_mode: 'HTML', reply_markup: mythResultKb() });
+      } catch {
+        await ctx.reply(mythText, { parse_mode: 'HTML', reply_markup: mythResultKb() });
+      }
+    } else {
+      try {
+        await ctx.editMessageReplyMarkup({ reply_markup: { inline_keyboard: [] } });
+      } catch { /* ignore if already edited */ }
+      await ctx.reply(mythText, { parse_mode: 'HTML', reply_markup: mythResultKb() });
+    }
+
     await maybeSendMeme(ctx, 'motivation', 0.15);
     await ctx.answerCallbackQuery();
   });

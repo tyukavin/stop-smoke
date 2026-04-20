@@ -13,7 +13,8 @@
     "generate": "prisma generate",
     "seed": "tsx prisma/seed.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "broadcast:active": "tsx scripts/broadcast-active.ts"
   },
   "engines": {
     "node": ">=20"

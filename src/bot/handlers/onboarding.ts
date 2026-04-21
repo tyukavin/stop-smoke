@@ -11,7 +11,17 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
     await ctx.reply(`Твой Telegram ID: <code>${ctx.from!.id}</code>`, { parse_mode: 'HTML' });
   });
 
-  bot.command('start', async (ctx) => {
+  const handleStart = async (ctx: BotContext) => {
+    // Сброс шага онбординга при повторном старте
+    ctx.session.step = undefined;
+    ctx.session.deviceType = undefined;
+    ctx.session.unitsPerDay = undefined;
+    ctx.session.pricePerPack = undefined;
+    ctx.session.unitsInPack = undefined;
+    ctx.session.nicotineMg = undefined;
+    ctx.session.yearsSmoking = undefined;
+    ctx.session.motivation = undefined;
+
     const tgUser = ctx.from!;
     const user = getUser(tgUser.id);
 
@@ -23,7 +33,7 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
       return;
     }
 
-    const created = createUser(tgUser.id, tgUser.username, tgUser.first_name);
+    createUser(tgUser.id, tgUser.username, tgUser.first_name);
     // Auto-promote to admin if ADMIN_IDS includes this user, or if this is the very first user
     if (config.adminIds.includes(tgUser.id) || getActiveUserCount() === 0) {
       updateUser(tgUser.id, { is_admin: 1 });
@@ -40,7 +50,11 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
       '<b>Что ты использовал?</b>',
       { parse_mode: 'HTML', reply_markup: deviceTypeKb() }
     );
-  });
+  };
+
+  bot.command('start', handleStart);
+  // Только /start — команда; «старт»/«start» текстом тоже запускают онбординг
+  bot.hears(/^(старт|start)$/iu, handleStart);
 
   for (const dt of ['cigarettes', 'iqos', 'vape', 'mini_vape'] as DeviceType[]) {
     bot.callbackQuery(`device_${dt}`, async (ctx) => {

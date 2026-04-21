@@ -4,10 +4,22 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     volumes:
       - bot-data:/app/data
+
+  # HTTP :80 → бот :3000 (удобнее открывать /admin без указания порта)
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - bot
+    ports:
+      - "80:80"
+      - "3000:80"
+    volumes:
+      - ./nginx/quitsmoke.conf:/etc/nginx/conf.d/default.conf:ro
 
 volumes:
   bot-data:

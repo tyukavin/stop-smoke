@@ -61,9 +61,13 @@ export function addContent(type: string, text: string, category = ''): number {
   return Number(result.lastInsertRowid);
 }
 
-export function updateContent(id: number, fields: { text?: string; active?: boolean; category?: string }): void {
+export function updateContent(
+  id: number,
+  fields: { text?: string; active?: boolean; category?: string; type?: string }
+): void {
   const sets: string[] = [];
   const vals: unknown[] = [];
+  if (fields.type !== undefined) { sets.push('type = ?'); vals.push(fields.type); }
   if (fields.text !== undefined) { sets.push('text = ?'); vals.push(fields.text); }
   if (fields.active !== undefined) { sets.push('active = ?'); vals.push(fields.active ? 1 : 0); }
   if (fields.category !== undefined) { sets.push('category = ?'); vals.push(fields.category); }

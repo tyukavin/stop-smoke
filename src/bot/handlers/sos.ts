@@ -6,19 +6,19 @@ import { getContentForUser, getRandomContent } from '../../services/content.js';
 import { logCraving, getCravingStats } from '../../services/craving.js';
 import { checkAndUnlock, formatAchievement } from '../../services/achievements.js';
 import { maybeSendMeme } from '../../services/memeHelper.js';
+import { botConfigGetRaw } from '../../services/botConfig.js';
+
+export async function handleSosEntry(ctx: BotContext): Promise<void> {
+  const user = getUser(ctx.from!.id);
+  if (!user?.onboarding_done) {
+    await ctx.reply(botConfigGetRaw('txt_need_onboarding'), { parse_mode: 'HTML' });
+    return;
+  }
+  ctx.session.step = 'sos';
+  await ctx.reply(botConfigGetRaw('txt_sos_intro'), { parse_mode: 'HTML', reply_markup: sosActionsKb() });
+}
 
 export function sosHandlers(bot: Bot<BotContext>) {
-  bot.hears('🆘 Чудовище атакует!', async (ctx) => {
-    const user = getUser(ctx.from!.id);
-    if (!user?.onboarding_done) { await ctx.reply('Сначала /start'); return; }
-    ctx.session.step = 'sos';
-    await ctx.reply(
-      '🆘 <b>Чудовище подкрадывается? Ха!</b>\n\n' +
-      'Оно голодное и жалкое. Через пару минут сдохнет.\n' +
-      'Давай выберем, чем его добить 💀',
-      { parse_mode: 'HTML', reply_markup: sosActionsKb() }
-    );
-  });
 
   const sosTypes: Record<string, string> = {
     sos_rational: 'sos_rational',
@@ -77,7 +77,7 @@ export function sosHandlers(bot: Bot<BotContext>) {
       if (ctx.session.step !== 'sos_intensity') { await ctx.answerCallbackQuery(); return; }
       ctx.session.cravingIntensity = i;
       ctx.session.step = 'sos_trigger';
-      await ctx.editMessageText('🔍 <b>А что спровоцировало?</b>', { parse_mode: 'HTML' });
+      await ctx.editMessageText(botConfigGetRaw('txt_sos_trigger_prompt'), { parse_mode: 'HTML' });
       await ctx.editMessageReplyMarkup({ reply_markup: triggerKb() });
       await ctx.answerCallbackQuery();
     });

@@ -3,7 +3,7 @@ import { initDb } from './db/index.js';
 import { createBot } from './bot/index.js';
 import { setupScheduler } from './bot/scheduler.js';
 import { createApi } from './api/index.js';
-import { seedContent, seedMaterials, seedAdmin } from './content/seed.js';
+import { seedContent, seedMaterials, seedAdmin, seedBotConfig } from './content/seed.js';
 
 async function main() {
   if (!config.botToken) {
@@ -17,6 +17,7 @@ async function main() {
   seedContent();
   seedMaterials();
   seedAdmin();
+  seedBotConfig();
 
   const bot = createBot();
   setupScheduler(bot);

@@ -1,5 +1,6 @@
 import { db } from '../db/index.js';
 import bcrypt from 'bcryptjs';
+import { BOT_CONFIG_DEFAULTS } from '../services/botConfig.js';
 
 interface SeedItem { type: string; category?: string; text: string }
 
@@ -226,4 +227,18 @@ export function seedAdmin() {
   const hash = bcrypt.hashSync('admin', 10);
   db.prepare('INSERT INTO admins (login, password_hash, name) VALUES (?, ?, ?)').run('admin', hash, 'Администратор');
   console.log('Default admin created (login: admin, password: admin)');
+}
+
+export function seedBotConfig() {
+  const existing = db.prepare('SELECT COUNT(*) as cnt FROM bot_config').get() as { cnt: number };
+  if (existing.cnt > 0) return;
+
+  const ins = db.prepare('INSERT INTO bot_config (key, value) VALUES (?, ?)');
+  const tx = db.transaction(() => {
+    for (const [k, v] of Object.entries(BOT_CONFIG_DEFAULTS)) {
+      ins.run(k, v);
+    }
+  });
+  tx();
+  console.log(`Seeded ${Object.keys(BOT_CONFIG_DEFAULTS).length} bot_config keys`);
 }

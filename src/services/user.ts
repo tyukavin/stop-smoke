@@ -37,6 +37,10 @@ export function getAllActiveUsers(): DbUser[] {
   return db.prepare('SELECT * FROM users WHERE onboarding_done = 1').all() as DbUser[];
 }
 
+export function getAllUsers(): DbUser[] {
+  return db.prepare('SELECT * FROM users ORDER BY id DESC').all() as DbUser[];
+}
+
 export function getUserCount(): number {
   const row = db.prepare('SELECT COUNT(*) as cnt FROM users').get() as { cnt: number };
   return row.cnt;

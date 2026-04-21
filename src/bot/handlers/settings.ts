@@ -2,24 +2,29 @@ import type { Bot } from 'grammy';
 import type { BotContext } from '../index.js';
 import { settingsKb, mainMenuKb } from '../keyboards/main.js';
 import { getUser, updateUser, resetQuitDate } from '../../services/user.js';
+import { botConfigGetRaw } from '../../services/botConfig.js';
 import { DEVICE_UNIT_LABELS } from '../../types/index.js';
 import type { DeviceType } from '../../types/index.js';
 
+export async function handleSettingsEntry(ctx: BotContext): Promise<void> {
+  const user = getUser(ctx.from!.id);
+  if (!user?.onboarding_done) {
+    await ctx.reply(botConfigGetRaw('txt_need_onboarding'), { parse_mode: 'HTML' });
+    return;
+  }
+  const dt = user.device_type as DeviceType;
+  await ctx.reply(
+    `⚙️ <b>Настройки</b>\n\n` +
+    `📦 Устройство: <b>${dt}</b>\n` +
+    `🔢 ${DEVICE_UNIT_LABELS[dt]}: <b>${user.units_per_day}</b>\n` +
+    `💵 Цена: <b>${user.price_per_pack}₽</b>\n` +
+    `🌐 UTC: <b>${user.timezone_offset >= 0 ? '+' : ''}${user.timezone_offset}</b>\n` +
+    `💭 Причина: <i>${user.motivation || '—'}</i>`,
+    { parse_mode: 'HTML', reply_markup: settingsKb() }
+  );
+}
+
 export function settingsHandlers(bot: Bot<BotContext>) {
-  bot.hears('⚙️ Настройки', async (ctx) => {
-    const user = getUser(ctx.from!.id);
-    if (!user?.onboarding_done) { await ctx.reply('Сначала /start'); return; }
-    const dt = user.device_type as DeviceType;
-    await ctx.reply(
-      `⚙️ <b>Настройки</b>\n\n` +
-      `📦 Устройство: <b>${dt}</b>\n` +
-      `🔢 ${DEVICE_UNIT_LABELS[dt]}: <b>${user.units_per_day}</b>\n` +
-      `💵 Цена: <b>${user.price_per_pack}₽</b>\n` +
-      `🌐 UTC: <b>${user.timezone_offset >= 0 ? '+' : ''}${user.timezone_offset}</b>\n` +
-      `💭 Причина: <i>${user.motivation || '—'}</i>`,
-      { parse_mode: 'HTML', reply_markup: settingsKb() }
-    );
-  });
 
   const fields: Record<string, { field: string; prompt: string; parse: (t: string) => unknown }> = {
     set_units: { field: 'units_per_day', prompt: '🔢 Введи количество/день:', parse: (t) => { const n = parseInt(t); return (n >= 1 && n <= 9999) ? n : null; } },
@@ -39,10 +44,7 @@ export function settingsHandlers(bot: Bot<BotContext>) {
 
   bot.callbackQuery('set_reset', async (ctx) => {
     resetQuitDate(ctx.from!.id);
-    await ctx.reply(
-      '🔄 <b>Таймер обновлён.</b>\nТы снова свободен — прямо сейчас! 🔓',
-      { parse_mode: 'HTML', reply_markup: mainMenuKb() }
-    );
+    await ctx.reply(botConfigGetRaw('txt_settings_reset_done'), { parse_mode: 'HTML', reply_markup: mainMenuKb() });
     await ctx.answerCallbackQuery();
   });
 

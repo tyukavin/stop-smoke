@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { db } from '../../db/index.js';
-import { getUserById, getAllActiveUsers, getUserCount, getActiveUserCount } from '../../services/user.js';
+import { getUserById, getAllUsers, getUserCount, getActiveUserCount } from '../../services/user.js';
 
 export async function usersRoutes(app: FastifyInstance) {
   app.addHook('onRequest', (app as any).authenticate);
@@ -20,7 +20,8 @@ export async function usersRoutes(app: FastifyInstance) {
   app.get('/', async (request, reply) => {
     const { admin } = request.user as any;
     if (!admin) return reply.status(403).send({ error: 'Admin only' });
-    return getAllActiveUsers();
+    // Все пользователи (включая не завершивших онбординг) — иначе таблица «пустая»
+    return getAllUsers();
   });
 
   // Get single user by internal id

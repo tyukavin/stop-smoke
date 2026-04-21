@@ -2,18 +2,22 @@ import type { Bot } from 'grammy';
 import type { BotContext } from '../index.js';
 import { materialCategoriesKb, mainMenuKb } from '../keyboards/main.js';
 import { getUser } from '../../services/user.js';
+import { botConfigGetRaw } from '../../services/botConfig.js';
 import { getMaterials, MATERIAL_CATEGORIES } from '../../services/materials.js';
 
-export function materialsHandlers(bot: Bot<BotContext>) {
-  bot.hears('📚 Материалы', async (ctx) => {
-    const user = getUser(ctx.from!.id);
-    if (!user?.onboarding_done) { await ctx.reply('Сначала /start'); return; }
-    await ctx.reply(
-      '📚 <b>Дополнительные материалы</b>\n\nВыбери категорию:',
-      { parse_mode: 'HTML', reply_markup: materialCategoriesKb() }
-    );
-  });
+export async function handleMaterialsEntry(ctx: BotContext): Promise<void> {
+  const user = getUser(ctx.from!.id);
+  if (!user?.onboarding_done) {
+    await ctx.reply(botConfigGetRaw('txt_need_onboarding'), { parse_mode: 'HTML' });
+    return;
+  }
+  await ctx.reply(
+    '📚 <b>Дополнительные материалы</b>\n\nВыбери категорию:',
+    { parse_mode: 'HTML', reply_markup: materialCategoriesKb() }
+  );
+}
 
+export function materialsHandlers(bot: Bot<BotContext>) {
   bot.callbackQuery(/^mat_(.+)$/, async (ctx) => {
     const cat = ctx.match![1];
     const mats = cat === 'all' ? getMaterials() : getMaterials(cat);

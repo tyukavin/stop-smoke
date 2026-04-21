@@ -11,6 +11,7 @@ import { materialsHandlers } from './handlers/materials.js';
 import { settingsHandlers } from './handlers/settings.js';
 import { adminHandlers } from './handlers/admin.js';
 import { healthHandlers } from './handlers/health.js';
+import { mainMenuTextRouter } from './handlers/mainMenu.js';
 
 export interface SessionData {
   step?: string;
@@ -46,6 +47,7 @@ export function createBot(): Bot<BotContext> {
   checkinHandlers(bot);
   materialsHandlers(bot);
   settingsHandlers(bot);
+  mainMenuTextRouter(bot);
   adminHandlers(bot);
 
   bot.catch((err) => {

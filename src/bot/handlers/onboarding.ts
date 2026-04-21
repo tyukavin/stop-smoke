@@ -5,6 +5,7 @@ import { createUser, getUser, updateUser, getActiveUserCount } from '../../servi
 import { config } from '../../config.js';
 import type { DeviceType } from '../../types/index.js';
 import { DEVICE_UNIT_LABELS } from '../../types/index.js';
+import { botConfigGetRaw } from '../../services/botConfig.js';
 
 export function onboardingHandlers(bot: Bot<BotContext>) {
   bot.command('myid', async (ctx) => {
@@ -26,10 +27,7 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
     const user = getUser(tgUser.id);
 
     if (user?.onboarding_done) {
-      await ctx.reply(
-        '🔓 <b>С возвращением, свободный человек!</b>\n\nИспользуй меню ниже.',
-        { parse_mode: 'HTML', reply_markup: mainMenuKb() }
-      );
+      await ctx.reply(botConfigGetRaw('txt_onboarding_return'), { parse_mode: 'HTML', reply_markup: mainMenuKb() });
       return;
     }
 
@@ -39,17 +37,7 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
       updateUser(tgUser.id, { is_admin: 1 });
     }
 
-    await ctx.reply(
-      '🔓 <b>Добро пожаловать в «Лёгкий способ»!</b>\n\n' +
-      'Ты здесь, чтобы <b>освободиться</b> от никотиновой ловушки.\n\n' +
-      'Не нужна сила воли — нужно только <b>понять</b>, как работает зависимость.\n\n' +
-      'Я — твой коуч. Вот что я умею:\n' +
-      '🔓 Трекинг свободы\n🆘 SOS при атаке Чудовища\n' +
-      '🎭 Убийца мифов\n🧠 CBT и mindfulness техники\n' +
-      '🏆 Достижения\n📚 Доп. материалы\n\n' +
-      '<b>Что ты использовал?</b>',
-      { parse_mode: 'HTML', reply_markup: deviceTypeKb() }
-    );
+    await ctx.reply(botConfigGetRaw('txt_onboarding_intro'), { parse_mode: 'HTML', reply_markup: deviceTypeKb() });
   };
 
   bot.command('start', handleStart);
@@ -63,10 +51,10 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
       updateUser(ctx.from!.id, { device_type: dt });
 
       const labels: Record<DeviceType, string> = {
-        cigarettes: '🚬 <b>Сколько сигарет в день ты курил?</b>',
-        iqos: '📱 <b>Сколько стиков IQOS в день?</b>',
-        vape: '💨 <b>Сколько затяжек вейпа в день?</b> (примерно)',
-        mini_vape: '🔋 <b>Сколько затяжек мини-вейпа в день?</b> (примерно)',
+        cigarettes: botConfigGetRaw('txt_onboard_units_cigarettes'),
+        iqos: botConfigGetRaw('txt_onboard_units_iqos'),
+        vape: botConfigGetRaw('txt_onboard_units_vape'),
+        mini_vape: botConfigGetRaw('txt_onboard_units_mini_vape'),
       };
 
       await ctx.editMessageText(labels[dt], { parse_mode: 'HTML' });
@@ -91,11 +79,12 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
 
       if (dt === 'vape' || dt === 'mini_vape') {
         ctx.session.step = 'nicotine_mg';
-        await ctx.reply('🧪 <b>Какая крепость жидкости (мг/мл никотина)?</b>\nНапример: 20, 50', { parse_mode: 'HTML' });
+        await ctx.reply(botConfigGetRaw('txt_onboard_nicotine'), { parse_mode: 'HTML' });
       } else {
         ctx.session.step = 'price_per_pack';
-        const label = dt === 'iqos' ? 'пачки стиков' : 'пачки сигарет';
-        await ctx.reply(`💵 <b>Сколько стоит одна ${label} (в рублях)?</b>`, { parse_mode: 'HTML' });
+        const priceKey =
+          dt === 'iqos' ? 'txt_onboard_price_iqos' : 'txt_onboard_price_cigarettes';
+        await ctx.reply(botConfigGetRaw(priceKey), { parse_mode: 'HTML' });
       }
       return;
     }
@@ -109,8 +98,8 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
       ctx.session.nicotineMg = n;
       updateUser(ctx.from!.id, { nicotine_mg: n });
       ctx.session.step = 'price_per_pack';
-      const label = dt === 'vape' ? 'флакона жидкости' : 'одноразовки / картриджа';
-      await ctx.reply(`💵 <b>Сколько стоит один ${label} (в рублях)?</b>`, { parse_mode: 'HTML' });
+      const priceKey = dt === 'vape' ? 'txt_onboard_price_vape' : 'txt_onboard_price_mini_vape';
+      await ctx.reply(botConfigGetRaw(priceKey), { parse_mode: 'HTML' });
       return;
     }
 
@@ -131,7 +120,7 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
       updateUser(ctx.from!.id, { units_in_pack: pack });
 
       ctx.session.step = 'years_smoking';
-      await ctx.reply('📅 <b>Сколько лет ты в никотиновой ловушке?</b>', { parse_mode: 'HTML' });
+      await ctx.reply(botConfigGetRaw('txt_onboard_years'), { parse_mode: 'HTML' });
       return;
     }
 
@@ -144,12 +133,7 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
       ctx.session.yearsSmoking = n;
       updateUser(ctx.from!.id, { years_smoking: n });
       ctx.session.step = 'motivation';
-      await ctx.reply(
-        '💭 <b>Зачем ты хочешь стать свободным?</b>\n\n' +
-        'Напиши главную причину.\n\n' +
-        '<i>Например: «Хочу дышать свободно», «Ради детей», «Не хочу быть рабом»</i>',
-        { parse_mode: 'HTML' }
-      );
+      await ctx.reply(botConfigGetRaw('txt_onboard_why'), { parse_mode: 'HTML' });
       return;
     }
 
@@ -190,23 +174,14 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
     updateUser(tgId, { quit_date: new Date().toISOString(), onboarding_done: 1 });
     ctx.session.step = undefined;
 
-    await ctx.editMessageText(
-      '🎉 <b>Поздравляю! Ты выбрал свободу!</b>\n\n' +
-      'Маленькое Чудовище скоро умрёт от голода. ' +
-      'Не кормить его — не требует силы воли. Только понимания.\n\n' +
-      '🔓 <b>Добро пожаловать в ряды счастливых некурящих!</b>',
-      { parse_mode: 'HTML' }
-    );
-    await ctx.reply('Выбери действие:', { reply_markup: mainMenuKb() });
+    await ctx.editMessageText(botConfigGetRaw('txt_onboard_done_edit'), { parse_mode: 'HTML' });
+    await ctx.reply(botConfigGetRaw('txt_onboard_choose_action'), { reply_markup: mainMenuKb() });
     await ctx.answerCallbackQuery();
   });
 
   bot.callbackQuery('onboard_restart', async (ctx) => {
     ctx.session.step = undefined;
-    await ctx.editMessageText(
-      '<b>Что ты использовал?</b>',
-      { parse_mode: 'HTML', reply_markup: deviceTypeKb() }
-    );
+    await ctx.editMessageText(botConfigGetRaw('txt_onboard_what_device'), { parse_mode: 'HTML', reply_markup: deviceTypeKb() });
     await ctx.answerCallbackQuery();
   });
 }

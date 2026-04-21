@@ -17,7 +17,7 @@ export function adminHandlers(bot: Bot<BotContext>) {
     }
     await ctx.reply(
       '🔐 <b>Админ-панель</b>\n\n' +
-      `Веб: <code>http://92.118.231.244:${config.apiPort}/admin</code>\n\n` +
+      `Веб-админка: <code>/admin</code> на порту API (<code>${config.apiPort}</code>)\n\n` +
       '<b>Команды:</b>\n' +
       '/addsticker — ответь на стикер, чтобы добавить мем\n' +
       '/stickerid — ответь на стикер, чтобы узнать file_id\n' +

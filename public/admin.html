@@ -118,6 +118,8 @@ tr:hover{background:rgba(108,92,231,.05)}
   <a onclick="go('content')" id="n-content">Контент</a>
   <a onclick="go('materials')" id="n-materials">Материалы</a>
   <a onclick="go('stickers')" id="n-stickers">Стикеры</a>
+  <a onclick="go('bot-kb')" id="n-bot-kb">Клавиатуры</a>
+  <a onclick="go('bot-txt')" id="n-bot-txt">Тексты бота</a>
   <a onclick="go('users')" id="n-users">Юзеры</a>
   <a onclick="go('settings')" id="n-settings">⚙️</a>
   <span class="spacer"></span>
@@ -188,11 +190,31 @@ tr:hover{background:rgba(108,92,231,.05)}
   </div>
 </div>
 
+<!-- BOT KEYBOARDS (JSON) -->
+<div class="container page hidden" id="p-bot-kb">
+  <div class="section">
+    <h2>⌨️ Клавиатуры бота</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">JSON: inline — ряды <code>[[{text,callback_data},...],...]</code>; главное меню — <code>[[{action,label},...],...]</code> (action: progress, stats, sos, health, achievements, myths, economy, motivation, materials, settings). После сохранения перезапустите бота.</p>
+    <button class="btn btn-w" onclick="resetBotConfig()">Сбросить всё к умолчанию</button>
+  </div>
+  <div id="botKbSections"></div>
+</div>
+
+<!-- BOT TEXTS -->
+<div class="container page hidden" id="p-bot-txt">
+  <div class="section">
+    <h2>📝 Тексты интерфейса</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">HTML допускается. Ключи <code>txt_*</code>. Перезапуск бота после правок.</p>
+  </div>
+  <div id="botTxtSections"></div>
+</div>
+
 <!-- USERS -->
 <div class="container page hidden" id="p-users">
   <div class="section">
     <h2>👥 Пользователи <span class="cnt" id="uCnt"></span></h2>
-    <div class="table-wrap"><table><thead><tr><th>ID</th><th>TG ID</th><th>Имя</th><th>Устр.</th><th>Дата</th><th>Дней</th><th></th></tr></thead>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Показаны все записи в БД (в т.ч. не завершившие опрос). Колонка «Онборд» — завершён ли вход.</p>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>TG ID</th><th>Имя</th><th>Онборд</th><th>Устр.</th><th>Дата</th><th>Дней</th><th></th></tr></thead>
     <tbody id="uBody"></tbody></table></div>
   </div>
 </div>
@@ -216,6 +238,23 @@ tr:hover{background:rgba(108,92,231,.05)}
 const API=location.origin+'/api';
 let tk=localStorage.getItem('qs_tk')||'';
 const TYPES=['motivation','myth','sos_rational','sos_switching','sos_celebrating','trigger_tip','health_fact','cbt_technique','mindfulness','checkin_morning','checkin_evening'];
+const BOT_KB_GROUPS=[
+  {id:'main',title:'Главное меню (reply)',keys:['kb_main_menu']},
+  {id:'onboard',title:'Онбординг',keys:['kb_device_type','kb_onboard_confirm']},
+  {id:'sos',title:'SOS и тяга',keys:['kb_sos_actions','kb_intensity','kb_trigger']},
+  {id:'myth',title:'Мифы',keys:['kb_myth_categories','kb_myth_result']},
+  {id:'checkin',title:'Чекины / настроение',keys:['kb_checkin','kb_mood']},
+  {id:'other',title:'Прочее',keys:['kb_settings','kb_material_cats']},
+];
+const BOT_TXT_GROUPS=[
+  {id:'gen',title:'Общие',keys:['txt_need_onboarding']},
+  {id:'sos2',title:'SOS',keys:['txt_sos_intro','txt_sos_trigger_prompt']},
+  {id:'myth2',title:'Мифы',keys:['txt_myth_menu']},
+  {id:'stats',title:'Карточка',keys:['txt_stats_generating','txt_stats_caption','txt_stats_fail']},
+  {id:'onb',title:'Онбординг (опрос)',keys:['txt_onboarding_return','txt_onboarding_intro','txt_onboard_units_cigarettes','txt_onboard_units_iqos','txt_onboard_units_vape','txt_onboard_units_mini_vape','txt_onboard_nicotine','txt_onboard_price_cigarettes','txt_onboard_price_iqos','txt_onboard_price_vape','txt_onboard_price_mini_vape','txt_onboard_years','txt_onboard_why','txt_onboard_done_edit','txt_onboard_choose_action','txt_onboard_what_device']},
+  {id:'set',title:'Настройки',keys:['txt_settings_reset_done']},
+];
+let botCfgMap={};
 const CTXS=['any','sos','victory','motivation','checkin','relapse','funny'];
 
 const h=()=>({Authorization:'Bearer '+tk,'Content-Type':'application/json'});
@@ -235,7 +274,7 @@ function logout(){tk='';localStorage.removeItem('qs_tk');document.getElementById
 function showApp(){document.getElementById('loginWrap').style.display='none';document.getElementById('app').style.display='block';go('dash');}
 
 function go(p){document.querySelectorAll('.page').forEach(e=>e.classList.add('hidden'));document.getElementById('p-'+p)?.classList.remove('hidden');document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));document.getElementById('n-'+p)?.classList.add('active');
-({dash:loadDash,content:loadContent,materials:loadMats,stickers:loadStickers,users:loadUsers})[p]?.();}
+({dash:loadDash,content:loadContent,materials:loadMats,stickers:loadStickers,users:loadUsers,'bot-kb':loadBotKb,'bot-txt':loadBotTxt})[p]?.();}
 
 async function loadDash(){
   try{const[st,ct,sk]=await Promise.all([api('GET','/users/stats'),api('GET','/content'),api('GET','/stickers')]);
@@ -260,7 +299,7 @@ async function loadContent(){
 async function addContent(){const type=document.getElementById('addType').value,cat=document.getElementById('addCat').value.trim(),text=document.getElementById('addText').value.trim();if(!text)return;await api('POST','/content',{type,category:cat,text});document.getElementById('addText').value='';document.getElementById('addCat').value='';toast('Добавлено!');loadContent();}
 async function delContent(id){if(!confirm('Удалить #'+id+'?'))return;await api('DELETE','/content/'+id);toast('Удалено');loadContent();}
 async function editContent(id){const d=await api('GET','/content');const c=(d.items||[]).find(i=>i.id===id);if(!c)return;
-showModal('Контент #'+id,`<div class="form-group"><label>Тип</label><select class="inp" id="ed_type">${TYPES.map(t=>`<option ${t===c.type?'selected':''}>${t}</option>`).join('')}</select></div><div class="form-group"><label>Категория</label><input class="inp" id="ed_cat" value="${c.category||''}"></div><div class="form-group"><label>Текст</label><textarea class="ta" id="ed_text">${esc(c.text)}</textarea></div><div class="form-group"><label>Активен</label><select class="inp" id="ed_active"><option value="1" ${c.active?'selected':''}>Да</option><option value="0" ${!c.active?'selected':''}>Нет</option></select></div>`,async()=>{await api('PUT','/content/'+id,{text:document.getElementById('ed_text').value,category:document.getElementById('ed_cat').value,active:document.getElementById('ed_active').value==='1'});closeModal();toast('Обновлено');loadContent();});}
+showModal('Контент #'+id,`<div class="form-group"><label>Тип</label><select class="inp" id="ed_type">${TYPES.map(t=>`<option ${t===c.type?'selected':''}>${t}</option>`).join('')}</select></div><div class="form-group"><label>Категория</label><input class="inp" id="ed_cat" value="${c.category||''}"></div><div class="form-group"><label>Текст</label><textarea class="ta" id="ed_text">${esc(c.text)}</textarea></div><div class="form-group"><label>Активен</label><select class="inp" id="ed_active"><option value="1" ${c.active?'selected':''}>Да</option><option value="0" ${!c.active?'selected':''}>Нет</option></select></div>`,async()=>{await api('PUT','/content/'+id,{type:document.getElementById('ed_type').value,text:document.getElementById('ed_text').value,category:document.getElementById('ed_cat').value,active:document.getElementById('ed_active').value==='1'});closeModal();toast('Обновлено');loadContent();});}
 
 async function loadMats(){const items=await api('GET','/materials/all');const arr=Array.isArray(items)?items:[];document.getElementById('mCnt').textContent=arr.length;
 document.getElementById('mBody').innerHTML=arr.map(m=>`<tr><td>${m.id}</td><td>${m.title}</td><td><a href="${m.url}" target="_blank">${m.url.slice(0,30)}…</a></td><td>${m.description||'—'}</td><td>${m.category}</td><td>${m.active?'✅':'❌'}</td><td><button class="btn btn-w btn-sm" onclick="editMat(${m.id})">✎</button> <button class="btn btn-d btn-sm" onclick="delMat(${m.id})">✕</button></td></tr>`).join('');}
@@ -278,7 +317,55 @@ showModal('Стикер #'+id,`<div class="form-group"><label>file_id</label><in
 
 async function loadUsers(){const items=await api('GET','/users');const arr=Array.isArray(items)?items:[];document.getElementById('uCnt').textContent=arr.length;
 document.getElementById('uBody').innerHTML=arr.map(u=>{const days=u.quit_date?Math.floor((Date.now()-new Date(u.quit_date).getTime())/864e5):0;
-return`<tr><td>${u.id}</td><td>${u.telegram_id}</td><td>${u.first_name||u.username||'—'}</td><td>${u.device_type}</td><td>${u.quit_date?u.quit_date.slice(0,10):'—'}</td><td>${days}</td><td><button class="btn btn-w btn-sm" onclick="editUser(${u.id})">✎</button> <button class="btn btn-d btn-sm" onclick="delUser(${u.id})">✕</button></td></tr>`;}).join('');}
+return`<tr><td>${u.id}</td><td>${u.telegram_id}</td><td>${u.first_name||u.username||'—'}</td><td>${u.onboarding_done?'✅':'⏳'}</td><td>${u.device_type}</td><td>${u.quit_date?u.quit_date.slice(0,10):'—'}</td><td>${days}</td><td><button class="btn btn-w btn-sm" onclick="editUser(${u.id})">✎</button> <button class="btn btn-d btn-sm" onclick="delUser(${u.id})">✕</button></td></tr>`;}).join('');}
+
+async function loadBotCfg(){const d=await api('GET','/bot-config');botCfgMap={};(d.items||[]).forEach(x=>{botCfgMap[x.key]=x.value});return d;}
+async function loadBotKb(){
+  await loadBotCfg();
+  const root=document.getElementById('botKbSections');root.innerHTML='';
+  BOT_KB_GROUPS.forEach(g=>{
+    const sec=document.createElement('div');sec.className='section';
+    const h=document.createElement('h2');h.textContent=g.title;sec.appendChild(h);
+    g.keys.forEach(k=>{
+      const val=botCfgMap[k]||'';
+      const id='bck_'+k.replace(/[^a-z0-9]/gi,'_');
+      const box=document.createElement('div');box.className='form-group';
+      const lab=document.createElement('label');const code=document.createElement('code');code.textContent=k;lab.appendChild(code);
+      const ta=document.createElement('textarea');ta.className='ta';ta.id=id;ta.style.minHeight='120px';ta.style.fontFamily='monospace';ta.style.fontSize='12px';ta.value=val;
+      const btn=document.createElement('button');btn.className='btn btn-p btn-sm';btn.style.marginTop='6px';btn.textContent='Сохранить';
+      btn.addEventListener('click',()=>saveBotKey(k,id));
+      box.appendChild(lab);box.appendChild(ta);box.appendChild(btn);
+      sec.appendChild(box);
+    });
+    root.appendChild(sec);
+  });
+}
+async function loadBotTxt(){
+  await loadBotCfg();
+  const root=document.getElementById('botTxtSections');root.innerHTML='';
+  BOT_TXT_GROUPS.forEach(g=>{
+    const sec=document.createElement('div');sec.className='section';
+    const h=document.createElement('h2');h.textContent=g.title;sec.appendChild(h);
+    g.keys.forEach(k=>{
+      const val=botCfgMap[k]||'';
+      const id='bct_'+k.replace(/[^a-z0-9]/gi,'_');
+      const box=document.createElement('div');box.className='form-group';
+      const lab=document.createElement('label');const code=document.createElement('code');code.textContent=k;lab.appendChild(code);
+      const ta=document.createElement('textarea');ta.className='ta';ta.id=id;ta.value=val;
+      const btn=document.createElement('button');btn.className='btn btn-p btn-sm';btn.style.marginTop='6px';btn.textContent='Сохранить';
+      btn.addEventListener('click',()=>saveBotKey(k,id));
+      box.appendChild(lab);box.appendChild(ta);box.appendChild(btn);
+      sec.appendChild(box);
+    });
+    root.appendChild(sec);
+  });
+}
+async function saveBotKey(key,elId){
+  const el=document.getElementById(elId);if(!el)return;
+  await api('PUT','/bot-config/'+encodeURIComponent(key),{value:el.value});
+  botCfgMap[key]=el.value;toast('Сохранено');}
+async function resetBotConfig(){if(!confirm('Сбросить все клавиатуры и тексты к значениям по умолчанию из кода?'))return;
+  await api('POST','/bot-config/reset',{});toast('Сброшено');await loadBotCfg();loadBotKb();loadBotTxt();}
 async function delUser(id){if(!confirm('Удалить пользователя #'+id+'?'))return;await api('DELETE','/users/'+id);toast('Удалено');loadUsers();}
 async function editUser(id){const u=await api('GET','/users/'+id);if(!u||u.error)return;const devs=['cigarettes','iqos','vape','mini_vape'];
 showModal('Юзер #'+id+' (TG: '+u.telegram_id+')',`<div class="form-row"><div class="form-group"><label>Устройство</label><select class="inp" id="eu_dev">${devs.map(d=>`<option ${d===u.device_type?'selected':''}>${d}</option>`).join('')}</select></div><div class="form-group"><label>Единиц/день</label><input class="inp" id="eu_units" type="number" value="${u.units_per_day}"></div></div><div class="form-row"><div class="form-group"><label>Цена</label><input class="inp" id="eu_price" type="number" value="${u.price_per_pack}"></div><div class="form-group"><label>В упаковке</label><input class="inp" id="eu_pack" type="number" value="${u.units_in_pack}"></div></div><div class="form-row"><div class="form-group"><label>Никотин мг/мл</label><input class="inp" id="eu_nic" type="number" value="${u.nicotine_mg}"></div><div class="form-group"><label>Лет курения</label><input class="inp" id="eu_years" type="number" value="${u.years_smoking}"></div></div><div class="form-row"><div class="form-group"><label>UTC offset</label><input class="inp" id="eu_tz" type="number" value="${u.timezone_offset}"></div><div class="form-group"><label>Онбординг</label><select class="inp" id="eu_onb"><option value="1" ${u.onboarding_done?'selected':''}>Да</option><option value="0" ${!u.onboarding_done?'selected':''}>Нет</option></select></div></div><div class="form-group"><label>Мотивация</label><input class="inp" id="eu_mot" value="${esc(u.motivation)}"></div><div class="form-group"><label>Дата отказа (ISO)</label><input class="inp" id="eu_quit" value="${u.quit_date||''}"></div>`,async()=>{await api('PUT','/users/'+id,{device_type:document.getElementById('eu_dev').value,units_per_day:+document.getElementById('eu_units').value,price_per_pack:+document.getElementById('eu_price').value,units_in_pack:+document.getElementById('eu_pack').value,nicotine_mg:+document.getElementById('eu_nic').value,years_smoking:+document.getElementById('eu_years').value,timezone_offset:+document.getElementById('eu_tz').value,motivation:document.getElementById('eu_mot').value,quit_date:document.getElementById('eu_quit').value||null,onboarding_done:+document.getElementById('eu_onb').value});closeModal();toast('Обновлено');loadUsers();});}

@@ -115,5 +115,11 @@ export function initDb() {
       name          TEXT DEFAULT '',
       created_at    TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS bot_config (
+      key         TEXT PRIMARY KEY,
+      value       TEXT NOT NULL DEFAULT '',
+      updated_at  TEXT DEFAULT (datetime('now'))
+    );
   `);
 }

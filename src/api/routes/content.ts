@@ -19,7 +19,7 @@ export async function contentRoutes(app: FastifyInstance) {
     return { id };
   });
 
-  app.put<{ Params: { id: string }; Body: { text?: string; active?: boolean; category?: string } }>(
+  app.put<{ Params: { id: string }; Body: { text?: string; active?: boolean; category?: string; type?: string } }>(
     '/:id', async (request, reply) => {
       const { admin } = request.user as any;
       if (!admin) return reply.status(403).send({ error: 'Admin only' });

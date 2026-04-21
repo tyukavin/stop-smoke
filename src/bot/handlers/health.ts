@@ -3,6 +3,7 @@ import type { BotContext } from '../index.js';
 import { mainMenuKb } from '../keyboards/main.js';
 import { getUser } from '../../services/user.js';
 import { calcProgress } from '../../services/progress.js';
+import { botConfigGetRaw } from '../../services/botConfig.js';
 
 const MILESTONES = [
   { minutes: 20, title: '20 минут', text: 'Пульс и давление нормализуются.', emoji: '❤️' },
@@ -22,35 +23,40 @@ const MILESTONES = [
   { minutes: 7884000, title: '15 лет', text: 'Сердце как у никогда не курившего!', emoji: '💖' },
 ];
 
-export function healthHandlers(bot: Bot<BotContext>) {
-  bot.hears('🏥 Здоровье', async (ctx) => {
-    const user = getUser(ctx.from!.id);
-    if (!user?.onboarding_done) { await ctx.reply('Сначала /start'); return; }
+export async function handleHealth(ctx: BotContext): Promise<void> {
+  const user = getUser(ctx.from!.id);
+  if (!user?.onboarding_done) {
+    await ctx.reply(botConfigGetRaw('txt_need_onboarding'), { parse_mode: 'HTML' });
+    return;
+  }
 
-    const p = calcProgress(user);
-    const freeMinutes = p.smokeFreeMinutes;
+  const p = calcProgress(user);
+  const freeMinutes = p.smokeFreeMinutes;
 
-    const lines: string[] = ['🏥 <b>Шкала восстановления здоровья</b>\n'];
+  const lines: string[] = ['🏥 <b>Шкала восстановления здоровья</b>\n'];
 
-    for (const m of MILESTONES) {
-      if (freeMinutes >= m.minutes) {
-        lines.push(`  ✅ ${m.emoji} <b>${m.title}</b> — ${m.text}`);
-      } else {
-        lines.push(`  ⬜ ${m.emoji} ${m.title} — ${m.text}`);
-        const remaining = m.minutes - freeMinutes;
-        let timeLeft: string;
-        if (remaining < 60) timeLeft = `${Math.ceil(remaining)} мин.`;
-        else if (remaining < 1440) timeLeft = `${(remaining / 60).toFixed(1)} ч.`;
-        else timeLeft = `${Math.ceil(remaining / 1440)} дн.`;
-        lines.push(`\n⏳ До следующего: <b>${timeLeft}</b>`);
-        break;
-      }
+  for (const m of MILESTONES) {
+    if (freeMinutes >= m.minutes) {
+      lines.push(`  ✅ ${m.emoji} <b>${m.title}</b> — ${m.text}`);
+    } else {
+      lines.push(`  ⬜ ${m.emoji} ${m.title} — ${m.text}`);
+      const remaining = m.minutes - freeMinutes;
+      let timeLeft: string;
+      if (remaining < 60) timeLeft = `${Math.ceil(remaining)} мин.`;
+      else if (remaining < 1440) timeLeft = `${(remaining / 60).toFixed(1)} ч.`;
+      else timeLeft = `${Math.ceil(remaining / 1440)} дн.`;
+      lines.push(`\n⏳ До следующего: <b>${timeLeft}</b>`);
+      break;
     }
+  }
 
-    if (freeMinutes >= MILESTONES[MILESTONES.length - 1].minutes) {
-      lines.push('\n🌟 <b>Все этапы восстановления пройдены!</b>');
-    }
+  if (freeMinutes >= MILESTONES[MILESTONES.length - 1].minutes) {
+    lines.push('\n🌟 <b>Все этапы восстановления пройдены!</b>');
+  }
 
-    await ctx.reply(lines.join('\n'), { parse_mode: 'HTML', reply_markup: mainMenuKb() });
-  });
+  await ctx.reply(lines.join('\n'), { parse_mode: 'HTML', reply_markup: mainMenuKb() });
+}
+
+export function healthHandlers(_bot: Bot<BotContext>) {
+  /* маршрут через mainMenuTextRouter */
 }

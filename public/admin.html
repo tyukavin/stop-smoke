@@ -240,6 +240,7 @@ let tk=localStorage.getItem('qs_tk')||'';
 const TYPES=['motivation','myth','sos_rational','sos_switching','sos_celebrating','trigger_tip','health_fact','cbt_technique','mindfulness','checkin_morning','checkin_evening'];
 const BOT_KB_GROUPS=[
   {id:'main',title:'Главное меню (reply)',keys:['kb_main_menu']},
+  {id:'mainmore',title:'Меню «Ещё…» (inline под кнопкой)',keys:['kb_main_menu_more']},
   {id:'onboard',title:'Онбординг',keys:['kb_device_type','kb_onboard_confirm']},
   {id:'sos',title:'SOS и тяга',keys:['kb_sos_actions','kb_intensity','kb_trigger']},
   {id:'myth',title:'Мифы',keys:['kb_myth_categories','kb_myth_result']},
@@ -247,7 +248,7 @@ const BOT_KB_GROUPS=[
   {id:'other',title:'Прочее',keys:['kb_settings','kb_material_cats']},
 ];
 const BOT_TXT_GROUPS=[
-  {id:'gen',title:'Общие',keys:['txt_need_onboarding']},
+  {id:'gen',title:'Общие',keys:['txt_need_onboarding','txt_main_menu_more']},
   {id:'sos2',title:'SOS',keys:['txt_sos_intro','txt_sos_trigger_prompt']},
   {id:'myth2',title:'Мифы',keys:['txt_myth_menu']},
   {id:'stats',title:'Карточка',keys:['txt_stats_generating','txt_stats_caption','txt_stats_fail']},

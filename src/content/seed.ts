@@ -242,3 +242,25 @@ export function seedBotConfig() {
   tx();
   console.log(`Seeded ${Object.keys(BOT_CONFIG_DEFAULTS).length} bot_config keys`);
 }
+
+/** Старые деплои с 5 рядами reply-меню — один раз сжимаем до компактного + «Ещё». */
+export function migrateBotConfigCompactMainMenu() {
+  const row = db.prepare('SELECT value FROM bot_config WHERE key = ?').get('kb_main_menu') as
+    | { value: string }
+    | undefined;
+  if (!row?.value) return;
+  try {
+    const rows = JSON.parse(row.value) as unknown[];
+    if (!Array.isArray(rows) || rows.length < 5) return;
+    const upd = db.prepare('UPDATE bot_config SET value = ?, updated_at = datetime(\'now\') WHERE key = ?');
+    upd.run(BOT_CONFIG_DEFAULTS.kb_main_menu, 'kb_main_menu');
+    const ins = db.prepare(
+      'INSERT INTO bot_config (key, value, updated_at) VALUES (?, ?, datetime(\'now\')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime(\'now\')'
+    );
+    ins.run('kb_main_menu_more', BOT_CONFIG_DEFAULTS.kb_main_menu_more);
+    ins.run('txt_main_menu_more', BOT_CONFIG_DEFAULTS.txt_main_menu_more);
+    console.log('Migrated kb_main_menu to compact layout (3 rows + more inline)');
+  } catch {
+    /* ignore */
+  }
+}

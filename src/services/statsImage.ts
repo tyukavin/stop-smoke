@@ -1,8 +1,218 @@
 import { createCanvas, type CanvasRenderingContext2D } from 'canvas';
 import type { DbUser } from '../types/index.js';
-import { calcProgress, formatDuration, formatMinutes } from './progress.js';
+import { calcProgress, formatMinutes } from './progress.js';
 import { ACHIEVEMENTS, getUserAchievements, checkAndUnlock } from './achievements.js';
 import { getCravingStats, getCheckinCount } from './craving.js';
+
+const BOT_HANDLE = '@notsmokefun_bot';
+
+function nextMilestoneDays(current: number): number {
+  const steps = [7, 14, 21, 30, 50, 100, 180, 365, 500, 730, 1000];
+  for (const d of steps) {
+    if (d > current) return d;
+  }
+  return current + 100;
+}
+
+function roundRectPath(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+
+function fillRoundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+  fill: string | CanvasGradient
+) {
+  roundRectPath(ctx, x, y, w, h, r);
+  ctx.fillStyle = fill;
+  ctx.fill();
+}
+
+function strokeRoundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+  stroke: string | CanvasGradient,
+  lineWidth: number
+) {
+  roundRectPath(ctx, x, y, w, h, r);
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+}
+
+/** Упрощённая иллюстрация: лёгкие + листья + птицы */
+function drawLungsHero(ctx: CanvasRenderingContext2D, cx: number, cy: number, scale: number) {
+  const s = scale;
+  // Свечение сзади
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 140 * s);
+  glow.addColorStop(0, 'rgba(255,255,255,0.95)');
+  glow.addColorStop(0.35, 'rgba(200,245,220,0.5)');
+  glow.addColorStop(1, 'rgba(200,235,220,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 135 * s, 0, Math.PI * 2);
+  ctx.fill();
+
+  const leaf = '#2e7d32';
+  const leafLight = '#43a047';
+  const leafDark = '#1b5e20';
+
+  // Левое «лёгкое»
+  ctx.save();
+  ctx.translate(cx - 55 * s, cy);
+  ctx.scale(s, s);
+  ctx.fillStyle = leaf;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 48, 72, -0.08, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = leafDark;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // жилки
+  ctx.strokeStyle = leafLight;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, -60);
+  ctx.quadraticCurveTo(8, 0, 0, 65);
+  ctx.stroke();
+  for (let i = -1; i <= 1; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * 18, -35);
+    ctx.quadraticCurveTo(i * 28, 5, i * 12, 50);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Правое
+  ctx.save();
+  ctx.translate(cx + 55 * s, cy);
+  ctx.scale(s, s);
+  ctx.fillStyle = leaf;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 48, 72, 0.08, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = leafDark;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.strokeStyle = leafLight;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, -60);
+  ctx.quadraticCurveTo(-8, 0, 0, 65);
+  ctx.stroke();
+  for (let i = -1; i <= 1; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * 18, -35);
+    ctx.quadraticCurveTo(i * 28, 5, i * 12, 50);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Простые «птицы»
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  const birds: [number, number, number][] = [
+    [-120, -35, 0.9],
+    [115, -50, 0.75],
+    [-95, 55, 0.65],
+    [100, 40, 0.7],
+  ];
+  for (const [bx, by, sz] of birds) {
+    ctx.save();
+    ctx.translate(cx + bx * s, cy + by * s);
+    ctx.scale(sz * s, sz * s);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(8, -6, 18, -2);
+    ctx.quadraticCurveTo(10, 4, 0, 0);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawCalendarIcon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, dayNum: string) {
+  const w = size;
+  const h = size * 1.05;
+  ctx.fillStyle = '#fff';
+  fillRoundRect(ctx, x, y, w, h, 6);
+  ctx.strokeStyle = '#b8860b';
+  ctx.lineWidth = 2;
+  strokeRoundRect(ctx, x, y, w, h, 6, '#b8860b', 2);
+  ctx.fillStyle = '#c9a227';
+  ctx.fillRect(x, y, w, h * 0.28);
+  ctx.fillStyle = '#2e7d32';
+  ctx.font = `bold ${size * 0.42}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(dayNum, x + w / 2, y + h * 0.62);
+}
+
+function drawMiniLung(ctx: CanvasRenderingContext2D, x: number, y: number, r: number) {
+  ctx.fillStyle = '#43a047';
+  ctx.beginPath();
+  ctx.ellipse(x, y, r * 0.45, r * 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + r * 0.55, y, r * 0.45, r * 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawRubleIcon(ctx: CanvasRenderingContext2D, x: number, y: number, r: number) {
+  ctx.strokeStyle = '#b8860b';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.font = `bold ${r * 1.1}px sans-serif`;
+  ctx.fillStyle = '#b8860b';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('₽', x, y + 1);
+}
+
+function drawBulb(ctx: CanvasRenderingContext2D, x: number, y: number, scale: number) {
+  const s = scale;
+  ctx.fillStyle = '#fdd835';
+  ctx.beginPath();
+  ctx.arc(x, y - 4 * s, 12 * s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fbc02d';
+  ctx.fillRect(x - 6 * s, y + 4 * s, 12 * s, 8 * s);
+  ctx.fillStyle = '#b8860b';
+  ctx.fillRect(x - 4 * s, y + 12 * s, 8 * s, 3 * s);
+}
+
+function statBar(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, pct: number) {
+  fillRoundRect(ctx, x, y, w, h, h / 2, '#e0e8e4');
+  const p = Math.max(0, Math.min(1, pct));
+  if (p > 0) {
+    const g = ctx.createLinearGradient(x, y, x + w * p, y);
+    g.addColorStop(0, '#66bb6a');
+    g.addColorStop(1, '#2e7d32');
+    fillRoundRect(ctx, x, y, Math.max(h, w * p), h, h / 2, g);
+  }
+}
 
 export function generateStatsImage(user: DbUser): Buffer {
   const progress = calcProgress(user);
@@ -11,220 +221,178 @@ export function generateStatsImage(user: DbUser): Buffer {
   const cravingStats = getCravingStats(user.id);
   const checkins = getCheckinCount(user.id);
 
-  const W = 800;
-  const H = 1100;
+  const W = 720;
+  const H = 1180;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
-  const PAD = 32;
+  const PAD = 36;
+  const cardR = 28;
 
-  // ═══════ BACKGROUND ═══════
-  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-  bgGrad.addColorStop(0, '#0a0e1a');
-  bgGrad.addColorStop(0.5, '#111827');
-  bgGrad.addColorStop(1, '#0f172a');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, W, H);
+  // Внешнее свечение (имитация)
+  for (let i = 6; i >= 1; i--) {
+    ctx.save();
+    ctx.globalAlpha = 0.04 + (7 - i) * 0.02;
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, '#ffd700');
+    g.addColorStop(1, '#daa520');
+    strokeRoundRect(ctx, 10 - i, 10 - i, W - 20 + i * 2, H - 20 + i * 2, cardR + i, g, 4);
+    ctx.restore();
+  }
 
-  // Decorative circles
-  ctx.globalAlpha = 0.04;
-  ctx.fillStyle = '#6c5ce7';
-  ctx.beginPath(); ctx.arc(W - 80, 120, 200, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#00cec9';
-  ctx.beginPath(); ctx.arc(80, H - 150, 180, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#fd79a8';
-  ctx.beginPath(); ctx.arc(W / 2, H / 2, 300, 0, Math.PI * 2); ctx.fill();
-  ctx.globalAlpha = 1;
+  // Карточка: мятный градиент
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#c5ebe3');
+  bg.addColorStop(0.45, '#e8f7f1');
+  bg.addColorStop(1, '#b8e0d4');
+  fillRoundRect(ctx, 14, 14, W - 28, H - 28, cardR, bg);
+  strokeRoundRect(ctx, 14, 14, W - 28, H - 28, cardR, 'rgba(184, 134, 11, 0.35)', 2);
 
-  // Border with glow
-  const borderGrad = ctx.createLinearGradient(0, 0, W, H);
-  borderGrad.addColorStop(0, '#6c5ce7');
-  borderGrad.addColorStop(0.5, '#00cec9');
-  borderGrad.addColorStop(1, '#fd79a8');
-  ctx.strokeStyle = borderGrad;
-  ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.roundRect(8, 8, W - 16, H - 16, 20); ctx.stroke();
+  const gold = '#9a7b1a';
+  const goldLight = '#c9a227';
+  const dark = '#2d3a35';
 
-  // Inner subtle border
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.roundRect(14, 14, W - 28, H - 28, 17); ctx.stroke();
-
-  // ═══════ HELPERS ═══════
-  const text = (s: string, x: number, y: number, sz: number, color: string, align: CanvasTextAlign = 'left', bold = false) => {
+  const text = (
+    s: string,
+    x: number,
+    y: number,
+    sz: number,
+    color: string,
+    align: CanvasTextAlign = 'left',
+    bold = false,
+    fontFamily = 'sans-serif'
+  ) => {
     ctx.fillStyle = color;
-    ctx.font = `${bold ? 'bold ' : ''}${sz}px sans-serif`;
+    ctx.font = `${bold ? 'bold ' : ''}${sz}px ${fontFamily}`;
     ctx.textAlign = align;
+    ctx.textBaseline = 'alphabetic';
     ctx.fillText(s, x, y);
   };
 
-  const roundRect = (x: number, y: number, w: number, h: number, r: number, fill: string, border?: string) => {
-    ctx.fillStyle = fill;
-    ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill();
-    if (border) { ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.stroke(); }
-  };
+  let y = 52;
 
-  const progressBar = (x: number, y: number, w: number, h: number, pct: number, color1: string, color2: string) => {
-    roundRect(x, y, w, h, h / 2, 'rgba(255,255,255,0.06)');
-    if (pct > 0) {
-      const grad = ctx.createLinearGradient(x, y, x + w, y);
-      grad.addColorStop(0, color1);
-      grad.addColorStop(1, color2);
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.roundRect(x, y, Math.max(h, w * Math.min(pct, 1)), h, h / 2);
-      ctx.fill();
-    }
-  };
+  // Заголовок
+  text('ВАШ УСПЕХ', W / 2, y, 34, gold, 'center', true, 'sans-serif');
+  y += 18;
 
-  let y = 40;
-  const name = user.first_name || user.username || `User`;
+  // Герой
+  drawLungsHero(ctx, W / 2, y + 130, 1);
+  y += 268;
 
-  // ═══════ HEADER ═══════
-  // Avatar circle with gradient border
-  const avX = W / 2, avY = y + 40;
-  const avGrad = ctx.createLinearGradient(avX - 40, avY - 40, avX + 40, avY + 40);
-  avGrad.addColorStop(0, '#6c5ce7');
-  avGrad.addColorStop(1, '#00cec9');
-  ctx.strokeStyle = avGrad;
-  ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.arc(avX, avY, 36, 0, Math.PI * 2); ctx.stroke();
+  // Подзаголовок статистики
+  text('СТАТИСТИКА', W / 2, y, 22, goldLight, 'center', false, 'Georgia, "Times New Roman", serif');
+  y += 36;
 
-  // Avatar letter
-  const letter = (name[0] || '?').toUpperCase();
-  ctx.fillStyle = 'rgba(108,92,231,0.2)';
-  ctx.beginPath(); ctx.arc(avX, avY, 34, 0, Math.PI * 2); ctx.fill();
-  text(letter, avX, avY + 12, 32, '#e0e0e0', 'center', true);
+  const days = progress.smokeFreeDays;
+  const winRate = cravingStats.total > 0 ? cravingStats.resisted / cravingStats.total : 0.55;
+  const recoveryPct = Math.min(99, Math.round(22 + days * 1.05 + winRate * 38));
+  const healthEnergy = Math.min(99, Math.round(12 + days * 0.7 + Math.min(28, checkins * 1.2)));
 
-  text(name, avX, avY + 56, 20, '#e0e0e0', 'center', true);
+  const colW = (W - PAD * 2) / 4;
+  const colCenters = [0, 1, 2, 3].map((i) => PAD + colW * i + colW / 2);
 
-  // Days badge
-  const daysText = `${progress.smokeFreeDays} дн. свободы`;
-  const daysBadgeW = ctx.measureText(daysText).width + 40;
-  const titleGrad = ctx.createLinearGradient(avX - daysBadgeW / 2, avY + 66, avX + daysBadgeW / 2, avY + 66);
-  titleGrad.addColorStop(0, '#6c5ce7');
-  titleGrad.addColorStop(1, '#00cec9');
-  ctx.fillStyle = titleGrad;
-  ctx.beginPath(); ctx.roundRect(avX - daysBadgeW / 2, avY + 66, daysBadgeW, 28, 14); ctx.fill();
-  text(daysText, avX, avY + 85, 14, '#fff', 'center', true);
+  // Иконки и числа — 4 колонки
+  const iconY = y;
+  drawCalendarIcon(ctx, colCenters[0] - 26, iconY, 52, String(days));
+  drawMiniLung(ctx, colCenters[1], iconY + 28, 32);
+  drawRubleIcon(ctx, colCenters[2], iconY + 28, 22);
+  drawBulb(ctx, colCenters[3], iconY + 22, 1);
 
-  y = avY + 110;
+  y += 78;
+  ctx.font = 'bold 20px sans-serif';
+  ctx.fillStyle = dark;
+  ctx.textAlign = 'center';
+  ctx.fillText(String(days), colCenters[0], y);
+  ctx.fillText(`${recoveryPct}%`, colCenters[1], y);
+  ctx.fillText(progress.moneySaved.toLocaleString('ru-RU'), colCenters[2], y);
+  ctx.fillText(`+${healthEnergy}%`, colCenters[3], y);
 
-  // ═══════ MAIN STATS GRID ═══════
-  const statsData = [
-    { icon: '🚫', value: String(progress.unitsAvoided), label: `${progress.deviceLabel} не использовано`, color: '#e74c3c' },
-    { icon: '💰', value: `${progress.moneySaved.toLocaleString('ru')} ₽`, label: 'сэкономлено', color: '#f39c12' },
-    { icon: '❤️', value: formatMinutes(progress.lifeRegainedMinutes), label: 'возвращено жизни', color: '#e84393' },
-    { icon: '☠️', value: progress.poisonAvoided, label: 'яда не впущено', color: '#00b894' },
-  ];
+  y += 6;
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = '#5a6d66';
+  const labels = ['ДНЕЙ БЕЗ ДЫМА', 'ВОССТАНОВЛЕНИЕ', 'СБЕРЕЖЕНИЯ', 'ЗДОРОВЬЕ И ЭНЕРГИЯ'];
+  labels.forEach((lab, i) => {
+    ctx.fillText(lab, colCenters[i], y + 14);
+  });
 
-  const cardW = (W - PAD * 2 - 12) / 2;
-  const cardH = 80;
+  y += 36;
+  // Полоса восстановления под 2-й колонкой
+  const barW = colW - 16;
+  statBar(ctx, colCenters[1] - barW / 2, y, barW, 10, recoveryPct / 100);
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = '#5a6d66';
+  ctx.fillText(`${recoveryPct}% complete`, colCenters[1], y + 24);
 
-  for (let i = 0; i < statsData.length; i++) {
-    const s = statsData[i];
-    const col = i % 2;
-    const row = Math.floor(i / 2);
-    const cx = PAD + col * (cardW + 12);
-    const cy = y + row * (cardH + 10);
+  y += 44;
 
-    roundRect(cx, cy, cardW, cardH, 12, 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0.06)');
+  // Следующий шаг
+  const next = nextMilestoneDays(days);
+  const bannerGrad = ctx.createLinearGradient(PAD, y, W - PAD, y);
+  bannerGrad.addColorStop(0, '#e8d89a');
+  bannerGrad.addColorStop(0.5, '#f5e6a8');
+  bannerGrad.addColorStop(1, '#e8d89a');
+  fillRoundRect(ctx, PAD, y, W - PAD * 2, 44, 12, bannerGrad);
+  ctx.strokeStyle = 'rgba(184, 134, 11, 0.4)';
+  ctx.lineWidth = 1;
+  strokeRoundRect(ctx, PAD, y, W - PAD * 2, 44, 12, 'rgba(184, 134, 11, 0.4)', 1);
+  text(`СЛЕДУЮЩИЙ ШАГ: ${next} ДНЕЙ!`, W / 2, y + 30, 15, dark, 'center', true);
 
-    // Colored dot
-    ctx.fillStyle = s.color;
-    ctx.beginPath(); ctx.arc(cx + 18, cy + 25, 5, 0, Math.PI * 2); ctx.fill();
+  y += 64;
 
-    text(s.icon + ' ' + s.value, cx + 32, cy + 32, 18, '#fff', 'left', true);
-    text(s.label, cx + 16, cy + 56, 11, '#888');
-  }
+  // Доп. строка: жизнь + яд (компактно)
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = '#4a5c55';
+  ctx.textAlign = 'center';
+  ctx.fillText(
+    `❤️ ${formatMinutes(progress.lifeRegainedMinutes)} жизни  ·  🚫 ${progress.poisonAvoided} яда`,
+    W / 2,
+    y
+  );
+  y += 28;
 
-  y += 2 * (cardH + 10) + 12;
+  // Достижения — одна строка счётчика
+  const achN = unlocked.size;
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#5a6d66';
+  ctx.fillText(`Достижения: ${achN} / ${ACHIEVEMENTS.length}`, W / 2, y);
 
-  // ═══════ CRAVING BATTLE BAR ═══════
-  roundRect(PAD, y, W - PAD * 2, 75, 14, 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0.06)');
-
-  const winRate = cravingStats.total > 0 ? cravingStats.resisted / cravingStats.total : 0;
-  text('⚔️ Битвы с Чудовищем', PAD + 16, y + 24, 14, '#e0e0e0', 'left', true);
-
-  const barX = PAD + 16;
-  const barW = W - PAD * 2 - 32;
-  progressBar(barX, y + 34, barW, 12, winRate, '#6c5ce7', '#00cec9');
-
-  text(`${cravingStats.resisted}/${cravingStats.total} побед`, barX, y + 65, 12, '#888');
-  if (cravingStats.total > 0) {
-    text(`${Math.round(winRate * 100)}%`, barX + barW, y + 65, 16, '#00cec9', 'right', true);
-  }
-  text(`📋 ${checkins} чекинов`, barX + barW / 2, y + 65, 12, '#888', 'center');
-
-  y += 90;
-
-  // ═══════ ACHIEVEMENTS ═══════
-  const achGrad = ctx.createLinearGradient(PAD, y, W - PAD, y);
-  achGrad.addColorStop(0, '#6c5ce7');
-  achGrad.addColorStop(1, '#00cec9');
-  text('🏆 Достижения', PAD, y + 4, 16, '#e0e0e0', 'left', true);
-  const achCount = unlocked.size;
-  const achPct = achCount / ACHIEVEMENTS.length;
-
-  // Achievement progress bar
-  progressBar(PAD + 160, y - 6, 200, 10, achPct, '#f39c12', '#fd79a8');
-  text(`${achCount}/${ACHIEVEMENTS.length}`, PAD + 370, y + 4, 13, '#f39c12', 'left', true);
-
-  y += 20;
-
-  // Achievement pills — 3 per row
-  const pillW = (W - PAD * 2 - 20) / 3;
-  const pillH = 36;
-  const pillGap = 8;
-
-  for (let i = 0; i < ACHIEVEMENTS.length; i++) {
-    const ach = ACHIEVEMENTS[i];
-    const col = i % 3;
-    const row = Math.floor(i / 3);
-    const px = PAD + col * (pillW + pillGap / 2 + 2);
-    const py = y + row * (pillH + 6);
-    const isOn = unlocked.has(ach.code);
-
-    if (isOn) {
-      const pillGr = ctx.createLinearGradient(px, py, px + pillW, py);
-      pillGr.addColorStop(0, 'rgba(0,206,201,0.15)');
-      pillGr.addColorStop(1, 'rgba(108,92,231,0.15)');
-      ctx.fillStyle = pillGr;
-      ctx.beginPath(); ctx.roundRect(px, py, pillW, pillH, 10); ctx.fill();
-      ctx.strokeStyle = 'rgba(0,206,201,0.3)';
-      ctx.lineWidth = 1; ctx.stroke();
-    } else {
-      roundRect(px, py, pillW, pillH, 10, 'rgba(255,255,255,0.02)', 'rgba(255,255,255,0.04)');
-    }
-
-    ctx.globalAlpha = isOn ? 1 : 0.25;
-    text(ach.emoji, px + 10, py + 24, 16, '#fff');
-    const titleTrunc = ach.title.length > 14 ? ach.title.slice(0, 13) + '…' : ach.title;
-    text(titleTrunc, px + 32, py + 22, 11, isOn ? '#00cec9' : '#555', 'left', isOn);
-    if (isOn) {
-      text('✓', px + pillW - 14, py + 23, 13, '#00b894', 'right', true);
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  y += Math.ceil(ACHIEVEMENTS.length / 3) * (pillH + 6) + 16;
-
-  // ═══════ MOTIVATION ═══════
+  y += 36;
   if (user.motivation) {
-    const motY = Math.min(y, H - 100);
-    roundRect(PAD, motY, W - PAD * 2, 48, 12, 'rgba(108,92,231,0.1)', 'rgba(108,92,231,0.2)');
-    const motText = user.motivation.length > 70 ? user.motivation.slice(0, 69) + '…' : user.motivation;
-    text(`💭 «${motText}»`, W / 2, motY + 30, 13, '#a29bfe', 'center');
+    const mot = user.motivation.length > 80 ? user.motivation.slice(0, 79) + '…' : user.motivation;
+    ctx.font = 'italic 12px Georgia, serif';
+    ctx.fillStyle = '#4a5c55';
+    ctx.fillText(`«${mot}»`, W / 2, y);
+    y += 28;
   }
 
-  // ═══════ FOOTER ═══════
-  const footGrad = ctx.createLinearGradient(0, H - 50, W, H - 50);
-  footGrad.addColorStop(0, '#6c5ce7');
-  footGrad.addColorStop(1, '#00cec9');
-  ctx.fillStyle = footGrad;
-  ctx.fillRect(PAD, H - 42, W - PAD * 2, 1);
+  // Подвал
+  y = H - 88;
+  ctx.strokeStyle = 'rgba(184, 134, 11, 0.45)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PAD, y);
+  ctx.lineTo(W - PAD, y);
+  ctx.stroke();
 
-  text('🔓 QuitSmoke Bot', W / 2, H - 20, 12, '#555', 'center');
-  text('@notsmokefun_bot', W / 2, H - 6, 10, '#444', 'center');
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#6d7a73';
+  ctx.textAlign = 'left';
+  ctx.fillText(BOT_HANDLE, PAD + 8, y + 28);
+
+  // Бейдж
+  const badgeW = 168;
+  const badgeH = 30;
+  const bx = W - PAD - badgeW - 4;
+  const by = y + 10;
+  const badgeG = ctx.createLinearGradient(bx, by, bx + badgeW, by);
+  badgeG.addColorStop(0, '#f0d878');
+  badgeG.addColorStop(1, '#daa520');
+  fillRoundRect(ctx, bx, by, badgeW, badgeH, badgeH / 2, badgeG);
+  ctx.strokeStyle = 'rgba(139, 105, 20, 0.5)';
+  strokeRoundRect(ctx, bx, by, badgeW, badgeH, badgeH / 2, 'rgba(139, 105, 20, 0.5)', 1);
+  ctx.font = 'italic 11px Georgia, serif';
+  ctx.fillStyle = '#4a3c10';
+  ctx.textAlign = 'center';
+  ctx.fillText('achievement unlocked', bx + badgeW / 2, by + 20);
 
   return canvas.toBuffer('image/png');
 }

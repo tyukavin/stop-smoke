@@ -4,27 +4,26 @@ import { db } from '../db/index.js';
 /** Значения по умолчанию (если в БД нет ключа — используется это). */
 /** Reply-меню: ряды из { action, label } — label виден пользователю, action — внутренний ключ. */
 export const BOT_CONFIG_DEFAULTS: Record<string, string> = {
+  /** Компактное reply-меню: основное + «Ещё…» с inline-списком */
   kb_main_menu: JSON.stringify([
     [
-      { action: 'progress', label: '🔓 Моя свобода' },
-      { action: 'stats', label: '📸 Моя карточка' },
+      { action: 'progress', label: '🔓 Свобода' },
+      { action: 'sos', label: '🆘 SOS' },
     ],
     [
-      { action: 'sos', label: '🆘 Чудовище атакует!' },
-      { action: 'health', label: '🏥 Здоровье' },
-    ],
-    [
-      { action: 'achievements', label: '🏆 Достижения' },
       { action: 'myths', label: '🎭 Мифы' },
-    ],
-    [
-      { action: 'economy', label: '💰 Экономия' },
       { action: 'motivation', label: '💡 Мотивация' },
     ],
-    [
-      { action: 'materials', label: '📚 Материалы' },
-      { action: 'settings', label: '⚙️ Настройки' },
-    ],
+    [{ action: 'menu_more', label: '⋮ Ещё…' }],
+  ]),
+  /** Inline под «Ещё…» (callback_data: menu_*) */
+  kb_main_menu_more: JSON.stringify([
+    [{ text: '📸 Моя карточка', callback_data: 'menu_stats' }],
+    [{ text: '🏥 Здоровье', callback_data: 'menu_health' }],
+    [{ text: '🏆 Достижения', callback_data: 'menu_achievements' }],
+    [{ text: '💰 Экономия', callback_data: 'menu_economy' }],
+    [{ text: '📚 Материалы', callback_data: 'menu_materials' }],
+    [{ text: '⚙️ Настройки', callback_data: 'menu_settings' }],
   ]),
 
   // ——— Inline: [[{text, callback_data}], ...] ———
@@ -198,6 +197,7 @@ export const BOT_CONFIG_DEFAULTS: Record<string, string> = {
   txt_onboard_what_device: '<b>Что ты использовал?</b>',
   txt_settings_reset_done:
     '🔄 <b>Таймер обновлён.</b>\nТы снова свободен — прямо сейчас! 🔓',
+  txt_main_menu_more: '👇 <b>Ещё разделы</b>',
 };
 
 const cache = new Map<string, string>();
@@ -281,15 +281,19 @@ export function replyKeyboardFromConfig(key: string, fallback: Keyboard): Keyboa
 /** Старый формат меню — только подписи; маппинг на действия. */
 const LEGACY_MAIN_MENU_LABEL_TO_ACTION: Record<string, string> = {
   '🔓 Моя свобода': 'progress',
+  '🔓 Свобода': 'progress',
   '📸 Моя карточка': 'stats',
   '🆘 Чудовище атакует!': 'sos',
+  '🆘 SOS': 'sos',
   '🏥 Здоровье': 'health',
   '🏆 Достижения': 'achievements',
+  '🏆 Ачивки': 'achievements',
   '🎭 Мифы': 'myths',
   '💰 Экономия': 'economy',
   '💡 Мотивация': 'motivation',
   '📚 Материалы': 'materials',
   '⚙️ Настройки': 'settings',
+  '⋮ Ещё…': 'menu_more',
 };
 
 /** Найти action по тексту кнопки главного меню (после trim). */

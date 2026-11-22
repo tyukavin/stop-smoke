@@ -1,6 +1,6 @@
 import { db } from '../db/index.js';
 import bcrypt from 'bcryptjs';
-import { BOT_CONFIG_DEFAULTS } from '../services/botConfig.js';
+import { BOT_CONFIG_DEFAULTS, botConfigInvalidateCache } from '../services/botConfig.js';
 
 interface SeedItem { type: string; category?: string; text: string }
 
@@ -262,5 +262,87 @@ export function migrateBotConfigCompactMainMenu() {
     console.log('Migrated kb_main_menu to compact layout (3 rows + more inline)');
   } catch {
     /* ignore */
+  }
+}
+
+/** Идемпотентная миграция v3: добавляем кнопки миссий, аналитики и дыхания/волны в существующий bot_config. */
+export function migrateBotConfigV3() {
+  let changed = false;
+
+  // 1. Add mission + analytics buttons to kb_main_menu_more if missing
+  const moreRow = db.prepare('SELECT value FROM bot_config WHERE key = ?').get('kb_main_menu_more') as
+    | { value: string }
+    | undefined;
+  if (moreRow?.value && !moreRow.value.includes('menu_mission')) {
+    try {
+      const rows = JSON.parse(moreRow.value) as unknown[];
+      if (Array.isArray(rows)) {
+        rows.unshift([
+          { text: '🎯 Миссия дня', callback_data: 'menu_mission' },
+          { text: '📊 Аналитика тяги', callback_data: 'menu_analytics' },
+        ]);
+        db.prepare("UPDATE bot_config SET value = ?, updated_at = datetime('now') WHERE key = ?").run(
+          JSON.stringify(rows),
+          'kb_main_menu_more'
+        );
+        changed = true;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // 2. Add breathing + wave buttons to kb_sos_actions if missing
+  const sosRow = db.prepare('SELECT value FROM bot_config WHERE key = ?').get('kb_sos_actions') as
+    | { value: string }
+    | undefined;
+  if (sosRow?.value && !sosRow.value.includes('sos_breathe')) {
+    try {
+      const rows = JSON.parse(sosRow.value) as unknown[];
+      if (Array.isArray(rows)) {
+        rows.unshift([
+          { text: '🌬️ Дыхание 4-7-8 (60с)', callback_data: 'sos_breathe' },
+          { text: '⏱️ Волна тяги (3 мин)', callback_data: 'sos_wave' },
+        ]);
+        db.prepare("UPDATE bot_config SET value = ?, updated_at = datetime('now') WHERE key = ?").run(
+          JSON.stringify(rows),
+          'kb_sos_actions'
+        );
+        changed = true;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // 3. Fix legacy onboarding price typos if still untouched
+  const typoFixes: Record<string, [string, string]> = {
+    txt_onboard_price_cigarettes: [
+      '💵 <b>Сколько стоит одна пачки сигарет (в рублях)?</b>',
+      BOT_CONFIG_DEFAULTS.txt_onboard_price_cigarettes,
+    ],
+    txt_onboard_price_iqos: [
+      '💵 <b>Сколько стоит одна пачки стиков (в рублях)?</b>',
+      BOT_CONFIG_DEFAULTS.txt_onboard_price_iqos,
+    ],
+    txt_onboard_price_vape: [
+      '💵 <b>Сколько стоит один флакона жидкости (в рублях)?</b>',
+      BOT_CONFIG_DEFAULTS.txt_onboard_price_vape,
+    ],
+    txt_onboard_price_mini_vape: [
+      '💵 <b>Сколько стоит один одноразовки / картриджа (в рублях)?</b>',
+      BOT_CONFIG_DEFAULTS.txt_onboard_price_mini_vape,
+    ],
+  };
+  for (const [key, [oldVal, newVal]] of Object.entries(typoFixes)) {
+    const r = db
+      .prepare("UPDATE bot_config SET value = ?, updated_at = datetime('now') WHERE key = ? AND value = ?")
+      .run(newVal, key, oldVal);
+    if (r.changes > 0) changed = true;
+  }
+
+  if (changed) {
+    botConfigInvalidateCache();
+    console.log('Migrated bot_config to v3 (missions, analytics, breathing/wave SOS)');
   }
 }

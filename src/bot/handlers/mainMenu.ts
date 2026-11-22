@@ -9,22 +9,28 @@ import { handleMotivation } from './motivation.js';
 import { handleMaterialsEntry } from './materials.js';
 import { handleSettingsEntry } from './settings.js';
 import { handleHealth } from './health.js';
+import { handleMissionEntry } from './missions.js';
+import { handleAnalytics } from './analytics.js';
 import { InlineKeyboard } from 'grammy';
 
 function moreKbFallback() {
   return new InlineKeyboard()
-    .text('📸 Моя карточка', 'menu_stats').row()
-    .text('🏥 Здоровье', 'menu_health').row()
-    .text('🏆 Достижения', 'menu_achievements').row()
-    .text('💰 Экономия', 'menu_economy').row()
-    .text('📚 Материалы', 'menu_materials').row()
-    .text('⚙️ Настройки', 'menu_settings');
+    .text('🎯 Миссия дня', 'menu_mission').text('📊 Аналитика тяги', 'menu_analytics').row()
+    .text('📸 Моя карточка', 'menu_stats').text('🏥 Здоровье', 'menu_health').row()
+    .text('🏆 Достижения', 'menu_achievements').text('💰 Экономия', 'menu_economy').row()
+    .text('📚 Материалы', 'menu_materials').text('⚙️ Настройки', 'menu_settings');
 }
 
 async function dispatchAction(ctx: BotContext, action: string): Promise<void> {
   switch (action) {
     case 'progress':
       await handleMyFreedom(ctx);
+      break;
+    case 'mission':
+      await handleMissionEntry(ctx);
+      break;
+    case 'analytics':
+      await handleAnalytics(ctx);
       break;
     case 'stats':
       await sendStatsImage(ctx);
@@ -86,6 +92,8 @@ export function mainMenuTextRouter(bot: Bot<BotContext>) {
     await ctx.answerCallbackQuery();
   };
 
+  bot.callbackQuery('menu_mission', (ctx) => menuCb(ctx, 'mission'));
+  bot.callbackQuery('menu_analytics', (ctx) => menuCb(ctx, 'analytics'));
   bot.callbackQuery('menu_stats', (ctx) => menuCb(ctx, 'stats'));
   bot.callbackQuery('menu_health', (ctx) => menuCb(ctx, 'health'));
   bot.callbackQuery('menu_achievements', (ctx) => menuCb(ctx, 'achievements'));

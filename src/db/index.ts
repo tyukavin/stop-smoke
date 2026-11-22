@@ -5,7 +5,8 @@ import { dirname } from 'path';
 
 mkdirSync(dirname(config.dbPath), { recursive: true });
 
-export const db = new Database(config.dbPath);
+export const db: Database.Database = new Database(config.dbPath);
+db.pragma('busy_timeout = 5000');
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
@@ -37,6 +38,9 @@ export function initDb() {
       quit_date       TEXT,
       onboarding_done INTEGER DEFAULT 0,
       is_admin        INTEGER DEFAULT 0,
+      goal_title      TEXT DEFAULT '',
+      goal_amount     REAL DEFAULT 0,
+      notifications_enabled INTEGER DEFAULT 1,
       created_at      TEXT DEFAULT (datetime('now'))
     );
 
@@ -121,5 +125,33 @@ export function initDb() {
       value       TEXT NOT NULL DEFAULT '',
       updated_at  TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS user_missions (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id      INTEGER NOT NULL REFERENCES users(id),
+      day_number   INTEGER NOT NULL,
+      completed_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(user_id, day_number)
+    );
+
+    CREATE TABLE IF NOT EXISTS health_notifications (
+      id                INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id           INTEGER NOT NULL REFERENCES users(id),
+      milestone_minutes INTEGER NOT NULL,
+      sent_at           TEXT DEFAULT (datetime('now')),
+      UNIQUE(user_id, milestone_minutes)
+    );
   `);
+
+  // Safe incremental column migrations for existing databases
+  const updatedCols = (db.prepare("PRAGMA table_info('users')").all() as { name: string }[]).map((c) => c.name);
+  if (!updatedCols.includes('goal_title')) {
+    db.exec("ALTER TABLE users ADD COLUMN goal_title TEXT DEFAULT ''");
+  }
+  if (!updatedCols.includes('goal_amount')) {
+    db.exec('ALTER TABLE users ADD COLUMN goal_amount REAL DEFAULT 0');
+  }
+  if (!updatedCols.includes('notifications_enabled')) {
+    db.exec('ALTER TABLE users ADD COLUMN notifications_enabled INTEGER DEFAULT 1');
+  }
 }

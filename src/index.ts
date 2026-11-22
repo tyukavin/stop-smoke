@@ -3,7 +3,14 @@ import { initDb } from './db/index.js';
 import { createBot } from './bot/index.js';
 import { setupScheduler } from './bot/scheduler.js';
 import { createApi } from './api/index.js';
-import { seedContent, seedMaterials, seedAdmin, seedBotConfig, migrateBotConfigCompactMainMenu } from './content/seed.js';
+import {
+  seedContent,
+  seedMaterials,
+  seedAdmin,
+  seedBotConfig,
+  migrateBotConfigCompactMainMenu,
+  migrateBotConfigV3,
+} from './content/seed.js';
 
 async function main() {
   if (!config.botToken) {
@@ -19,6 +26,7 @@ async function main() {
   seedAdmin();
   seedBotConfig();
   migrateBotConfigCompactMainMenu();
+  migrateBotConfigV3();
 
   const bot = createBot();
   setupScheduler(bot);
@@ -28,7 +36,25 @@ async function main() {
   console.log(`API listening on port ${config.apiPort}`);
 
   bot.start({
-    onStart: (info) => console.log(`Bot @${info.username} started`),
+    onStart: async (info) => {
+      console.log(`Bot @${info.username} started`);
+      try {
+        await bot.api.setMyCommands([
+          { command: 'start', description: 'Главное меню / начало' },
+          { command: 'freedom', description: '🔓 Моя свобода и прогресс' },
+          { command: 'sos', description: '🆘 Помощь при тяге' },
+          { command: 'breathe', description: '🌬️ Дыхание 4-7-8 (60 сек)' },
+          { command: 'mission', description: '🎯 Миссия дня (14-дневный курс)' },
+          { command: 'analytics', description: '📊 Карта триггеров и тяги' },
+          { command: 'health', description: '🏥 Шкала восстановления здоровья' },
+          { command: 'goal', description: '💰 Экономия и личная цель' },
+          { command: 'stats', description: '📸 Моя карточка прогресса' },
+          { command: 'settings', description: '⚙️ Настройки профиля' },
+        ]);
+      } catch (e) {
+        console.warn('Could not register bot commands:', e);
+      }
+    },
   });
 }
 

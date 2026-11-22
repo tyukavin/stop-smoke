@@ -21,6 +21,7 @@ export function updateUser(telegramId: number, fields: Partial<Record<string, un
     'device_type', 'units_per_day', 'price_per_pack', 'units_in_pack',
     'nicotine_mg', 'years_smoking', 'timezone_offset', 'motivation',
     'quit_date', 'onboarding_done', 'is_admin',
+    'goal_title', 'goal_amount', 'notifications_enabled',
   ]);
   const entries = Object.entries(fields).filter(([k]) => allowed.has(k));
   if (!entries.length) return;
@@ -30,7 +31,11 @@ export function updateUser(telegramId: number, fields: Partial<Record<string, un
 }
 
 export function resetQuitDate(telegramId: number): void {
-  db.prepare('UPDATE users SET quit_date = datetime(\'now\') WHERE telegram_id = ?').run(telegramId);
+  const user = getUser(telegramId);
+  db.prepare("UPDATE users SET quit_date = datetime('now') WHERE telegram_id = ?").run(telegramId);
+  if (user) {
+    db.prepare('DELETE FROM health_notifications WHERE user_id = ?').run(user.id);
+  }
 }
 
 export function getAllActiveUsers(): DbUser[] {

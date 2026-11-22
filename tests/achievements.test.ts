@@ -26,8 +26,8 @@ describe('Achievements', () => {
     if (existsSync(TEST_DB_PATH)) unlinkSync(TEST_DB_PATH);
   });
 
-  it('has 18 achievements defined', () => {
-    expect(ACHIEVEMENTS.length).toBe(18);
+  it('has 20 achievements defined', () => {
+    expect(ACHIEVEMENTS.length).toBe(20);
   });
 
   it('has unique codes', () => {

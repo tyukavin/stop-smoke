@@ -11,6 +11,8 @@ import { materialsHandlers } from './handlers/materials.js';
 import { settingsHandlers } from './handlers/settings.js';
 import { adminHandlers } from './handlers/admin.js';
 import { healthHandlers } from './handlers/health.js';
+import { missionHandlers } from './handlers/missions.js';
+import { analyticsHandlers } from './handlers/analytics.js';
 import { mainMenuTextRouter } from './handlers/mainMenu.js';
 
 export interface SessionData {
@@ -22,6 +24,7 @@ export interface SessionData {
   nicotineMg?: number;
   yearsSmoking?: number;
   motivation?: string;
+  goalTitle?: string;
   editField?: string;
   cravingResisted?: boolean;
   cravingIntensity?: number;
@@ -42,6 +45,8 @@ export function createBot(): Bot<BotContext> {
   sosHandlers(bot);
   mythsHandlers(bot);
   healthHandlers(bot);
+  missionHandlers(bot);
+  analyticsHandlers(bot);
   achievementsHandlers(bot);
   motivationHandlers(bot);
   checkinHandlers(bot);

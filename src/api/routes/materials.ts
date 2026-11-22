@@ -25,11 +25,14 @@ export async function materialsRoutes(app: FastifyInstance) {
     }
   );
 
-  app.put<{ Params: { id: string }; Body: any }>('/:id', async (request, reply) => {
+  app.put<{
+    Params: { id: string };
+    Body: Partial<{ title: string; url: string; description: string; category: string; active: boolean; sort_order: number }>;
+  }>('/:id', async (request, reply) => {
     try { await request.jwtVerify(); } catch { return reply.status(401).send({ error: 'Auth required' }); }
     const { admin } = request.user as any;
     if (!admin) return reply.status(403).send({ error: 'Admin only' });
-    updateMaterial(parseInt(request.params.id), request.body);
+    updateMaterial(parseInt(request.params.id, 10), request.body || {});
     return { ok: true };
   });
 

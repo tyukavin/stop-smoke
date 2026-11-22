@@ -7,6 +7,7 @@ import { calcProgress } from '../../services/progress.js';
 import { checkAndUnlock, formatAchievement } from '../../services/achievements.js';
 import { getContentForUser } from '../../services/content.js';
 import { maybeSendMeme } from '../../services/memeHelper.js';
+import { DAILY_MISSIONS, getCompletedMissionDays, getMissionForDay } from '../../services/missions.js';
 
 export async function sendDailyCheckin(bot: Bot<BotContext>, telegramId: number) {
   const user = getUser(telegramId);
@@ -16,7 +17,15 @@ export async function sendDailyCheckin(bot: Bot<BotContext>, telegramId: number)
   const c = getContentForUser(user.id, 'checkin_morning');
   const day = p.smokeFreeDays + 1;
 
-  const text = `🌅 <b>День ${day} на свободе!</b>\n\n${c?.text || 'Как здорово проснуться без нужды в яде!'}`;
+  let text = `🌅 <b>День ${day} на свободе!</b>\n\n${c?.text || 'Как здорово проснуться без нужды в яде!'}`;
+
+  if (day <= DAILY_MISSIONS.length) {
+    const completed = new Set(getCompletedMissionDays(user.id));
+    if (!completed.has(day)) {
+      const m = getMissionForDay(day);
+      text += `\n\n🎯 <b>Миссия дня ${day}:</b> ${m.emoji} ${m.title}\n<i>Открой /mission, чтобы выполнить</i>`;
+    }
+  }
 
   await bot.api.sendMessage(telegramId, text, { parse_mode: 'HTML', reply_markup: checkinKb() });
 }

@@ -60,3 +60,72 @@ export function formatMinutes(minutes: number): string {
   const h = hours % 24;
   return `${days} дн. ${h} ч.`;
 }
+
+/**
+ * Human-friendly exact duration: shows hours/minutes during the critical first 7 days,
+ * then switches to days/months/years.
+ */
+export function formatExactDuration(totalMinutes: number): string {
+  const mins = Math.max(0, Math.floor(totalMinutes));
+  if (mins < 60) return `${mins} мин.`;
+  const totalHours = Math.floor(mins / 60);
+  if (totalHours < 24) {
+    const m = mins % 60;
+    return m > 0 ? `${totalHours} ч. ${m} мин.` : `${totalHours} ч.`;
+  }
+  const days = Math.floor(totalHours / 24);
+  if (days < 7) {
+    const h = totalHours % 24;
+    return h > 0 ? `${days} дн. ${h} ч.` : `${days} дн.`;
+  }
+  return formatDuration(days);
+}
+
+export interface GoalProgress {
+  title: string;
+  targetAmount: number;
+  savedAmount: number;
+  remainingAmount: number;
+  fraction: number;
+  percent: number;
+  reached: boolean;
+  daysLeft: number | null;
+  targetDateStr: string | null;
+}
+
+export function calcGoalProgress(user: DbUser, moneySaved: number): GoalProgress | null {
+  const title = (user.goal_title || '').trim();
+  const targetAmount = Number(user.goal_amount || 0);
+  if (!title || targetAmount <= 0) return null;
+
+  const fraction = Math.min(1, Math.max(0, moneySaved / targetAmount));
+  const percent = Math.min(100, Math.round(fraction * 100));
+  const remainingAmount = Math.max(0, Math.ceil(targetAmount - moneySaved));
+  const reached = moneySaved >= targetAmount;
+
+  const pricePerUnit = user.units_in_pack > 0 ? user.price_per_pack / user.units_in_pack : 0;
+  const dailySpend = pricePerUnit * user.units_per_day;
+
+  let daysLeft: number | null = null;
+  let targetDateStr: string | null = null;
+  if (!reached && dailySpend > 0) {
+    daysLeft = Math.ceil(remainingAmount / dailySpend);
+    const dt = new Date(Date.now() + daysLeft * 86_400_000);
+    const dd = String(dt.getDate()).padStart(2, '0');
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const yyyy = dt.getFullYear();
+    targetDateStr = `${dd}.${mm}.${yyyy}`;
+  }
+
+  return {
+    title,
+    targetAmount,
+    savedAmount: Math.round(moneySaved),
+    remainingAmount,
+    fraction,
+    percent,
+    reached,
+    daysLeft,
+    targetDateStr,
+  };
+}

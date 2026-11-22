@@ -16,6 +16,9 @@ export interface DbUser {
   quit_date: string | null;
   onboarding_done: number;
   is_admin: number;
+  goal_title?: string;
+  goal_amount?: number;
+  notifications_enabled?: number;
   created_at: string;
 }
 
@@ -55,6 +58,13 @@ export interface ProgressData {
   poisonAvoided: string;
   deviceLabel: string;
 }
+
+export const DEVICE_NAMES: Record<DeviceType, string> = {
+  cigarettes: '🚬 Сигареты',
+  iqos: '📱 IQOS / Glo',
+  vape: '💨 Вейп',
+  mini_vape: '🔋 Мини-вейп / Pod',
+};
 
 export const DEVICE_LABELS: Record<DeviceType, string> = {
   cigarettes: 'сигарет',

@@ -2,6 +2,7 @@ import { db } from '../db/index.js';
 import type { DbUser } from '../types/index.js';
 import { calcProgress } from './progress.js';
 import { getCravingStats, getCheckinCount } from './craving.js';
+import { getCompletedMissionCount } from './missions.js';
 
 export interface Achievement {
   code: string;
@@ -30,6 +31,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   { code: 'money_10000', title: 'Десять тысяч', description: '10 000₽! Табачная индустрия плачет.', emoji: '🏦' },
   { code: 'checkin_7', title: 'Неделя осознанности', description: '7 чекинов! Свобода — привычка.', emoji: '📝' },
   { code: 'checkin_30', title: 'Свободный месяц', description: '30 чекинов! Полноценный свободный человек.', emoji: '📅' },
+  { code: 'mission_1', title: 'Первый шаг', description: 'Выполнена первая миссия дня! Так держать.', emoji: '🎯' },
+  { code: 'mission_14', title: 'Выпускник «Лёгкого способа»', description: 'Все 14 ежедневных миссий пройдены!', emoji: '🎓' },
 ];
 
 const ACH_MAP = new Map(ACHIEVEMENTS.map(a => [a.code, a]));
@@ -55,13 +58,15 @@ export function checkAndUnlock(user: DbUser): string[] {
   const progress = calcProgress(user);
   const stats = getCravingStats(user.id);
   const checkins = getCheckinCount(user.id);
+  const missionsDone = getCompletedMissionCount(user.id);
   const newlyUnlocked: string[] = [];
 
   for (const ach of ACHIEVEMENTS) {
     if (existing.has(ach.code)) continue;
 
     if (ach.conditionDays !== undefined) {
-      if (progress.smokeFreeDays >= ach.conditionDays) {
+      const requiredMinutes = Math.round(ach.conditionDays * 1440);
+      if (progress.smokeFreeMinutes >= requiredMinutes) {
         unlock(user.id, ach.code);
         newlyUnlocked.push(ach.code);
       }
@@ -77,6 +82,9 @@ export function checkAndUnlock(user: DbUser): string[] {
     } else if (ach.code.startsWith('checkin_')) {
       const threshold = parseInt(ach.code.split('_')[1]);
       if (checkins >= threshold) { unlock(user.id, ach.code); newlyUnlocked.push(ach.code); }
+    } else if (ach.code.startsWith('mission_')) {
+      const threshold = parseInt(ach.code.split('_')[1]);
+      if (missionsDone >= threshold) { unlock(user.id, ach.code); newlyUnlocked.push(ach.code); }
     }
   }
 

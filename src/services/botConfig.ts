@@ -18,12 +18,22 @@ export const BOT_CONFIG_DEFAULTS: Record<string, string> = {
   ]),
   /** Inline под «Ещё…» (callback_data: menu_*) */
   kb_main_menu_more: JSON.stringify([
-    [{ text: '📸 Моя карточка', callback_data: 'menu_stats' }],
-    [{ text: '🏥 Здоровье', callback_data: 'menu_health' }],
-    [{ text: '🏆 Достижения', callback_data: 'menu_achievements' }],
-    [{ text: '💰 Экономия', callback_data: 'menu_economy' }],
-    [{ text: '📚 Материалы', callback_data: 'menu_materials' }],
-    [{ text: '⚙️ Настройки', callback_data: 'menu_settings' }],
+    [
+      { text: '🎯 Миссия дня', callback_data: 'menu_mission' },
+      { text: '📊 Аналитика тяги', callback_data: 'menu_analytics' },
+    ],
+    [
+      { text: '📸 Моя карточка', callback_data: 'menu_stats' },
+      { text: '🏥 Здоровье', callback_data: 'menu_health' },
+    ],
+    [
+      { text: '🏆 Достижения', callback_data: 'menu_achievements' },
+      { text: '💰 Экономия', callback_data: 'menu_economy' },
+    ],
+    [
+      { text: '📚 Материалы', callback_data: 'menu_materials' },
+      { text: '⚙️ Настройки', callback_data: 'menu_settings' },
+    ],
   ]),
 
   // ——— Inline: [[{text, callback_data}], ...] ———
@@ -34,11 +44,17 @@ export const BOT_CONFIG_DEFAULTS: Record<string, string> = {
     [{ text: '🔋 Мини-вейп / Pod', callback_data: 'device_mini_vape' }],
   ]),
   kb_sos_actions: JSON.stringify([
+    [
+      { text: '🌬️ Дыхание 4-7-8 (60с)', callback_data: 'sos_breathe' },
+      { text: '⏱️ Волна тяги (3 мин)', callback_data: 'sos_wave' },
+    ],
     [{ text: '🧠 Рациональный ответ', callback_data: 'sos_rational' }],
     [{ text: '🔑 Переключение фокуса', callback_data: 'sos_switching' }],
     [{ text: '🎉 Поздравь меня!', callback_data: 'sos_celebrating' }],
-    [{ text: '🧘 Mindfulness-техника', callback_data: 'sos_mindfulness' }],
-    [{ text: '🧠 CBT-техника', callback_data: 'sos_cbt' }],
+    [
+      { text: '🧘 Mindfulness', callback_data: 'sos_mindfulness' },
+      { text: '🧠 CBT-техника', callback_data: 'sos_cbt' },
+    ],
     [{ text: '🎲 Случайная поддержка', callback_data: 'sos_random' }],
     [
       { text: '✅ Чудовище побеждено!', callback_data: 'sos_resisted' },
@@ -179,10 +195,10 @@ export const BOT_CONFIG_DEFAULTS: Record<string, string> = {
   txt_onboard_units_vape: '💨 <b>Сколько затяжек вейпа в день?</b> (примерно)',
   txt_onboard_units_mini_vape: '🔋 <b>Сколько затяжек мини-вейпа в день?</b> (примерно)',
   txt_onboard_nicotine: '🧪 <b>Какая крепость жидкости (мг/мл никотина)?</b>\nНапример: 20, 50',
-  txt_onboard_price_cigarettes: '💵 <b>Сколько стоит одна пачки сигарет (в рублях)?</b>',
-  txt_onboard_price_iqos: '💵 <b>Сколько стоит одна пачки стиков (в рублях)?</b>',
-  txt_onboard_price_vape: '💵 <b>Сколько стоит один флакона жидкости (в рублях)?</b>',
-  txt_onboard_price_mini_vape: '💵 <b>Сколько стоит один одноразовки / картриджа (в рублях)?</b>',
+  txt_onboard_price_cigarettes: '💵 <b>Сколько стоит одна пачка сигарет (в рублях)?</b>',
+  txt_onboard_price_iqos: '💵 <b>Сколько стоит одна пачка стиков (в рублях)?</b>',
+  txt_onboard_price_vape: '💵 <b>Сколько стоит один флакон жидкости (в рублях)?</b>',
+  txt_onboard_price_mini_vape: '💵 <b>Сколько стоит одна одноразка / картридж (в рублях)?</b>',
   txt_onboard_years: '📅 <b>Сколько лет ты в никотиновой ловушке?</b>',
   txt_onboard_why:
     '💭 <b>Зачем ты хочешь стать свободным?</b>\n\n' +
@@ -293,6 +309,8 @@ const LEGACY_MAIN_MENU_LABEL_TO_ACTION: Record<string, string> = {
   '💡 Мотивация': 'motivation',
   '📚 Материалы': 'materials',
   '⚙️ Настройки': 'settings',
+  '🎯 Миссия дня': 'mission',
+  '📊 Аналитика тяги': 'analytics',
   '⋮ Ещё…': 'menu_more',
 };
 

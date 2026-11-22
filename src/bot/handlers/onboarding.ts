@@ -6,6 +6,7 @@ import { config } from '../../config.js';
 import type { DeviceType } from '../../types/index.js';
 import { DEVICE_UNIT_LABELS } from '../../types/index.js';
 import { botConfigGetRaw } from '../../services/botConfig.js';
+import { escapeHtml } from '../../utils/html.js';
 
 export function onboardingHandlers(bot: Bot<BotContext>) {
   bot.command('myid', async (ctx) => {
@@ -158,7 +159,7 @@ export function onboardingHandlers(bot: Bot<BotContext>) {
         `🔢 ${unitLabel}: <b>${units}</b>\n` +
         `💵 Цена: <b>${price}₽</b>\n` +
         `📅 Стаж: <b>${years} лет</b>\n` +
-        `💭 Причина: <i>${motivation}</i>\n\n` +
+        `💭 Причина: <i>${escapeHtml(motivation)}</i>\n\n` +
         `За это время отдано ~<b>${totalMoney.toLocaleString('ru')}₽</b>.\n\n` +
         `<b>Готов стать свободным?</b>`,
         { parse_mode: 'HTML', reply_markup: confirmKb() }

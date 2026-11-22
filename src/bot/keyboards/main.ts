@@ -29,10 +29,12 @@ export function sosActionsKb() {
   return inlineKeyboardFromConfig(
     'kb_sos_actions',
     new InlineKeyboard()
+      .text('🌬️ Дыхание 4-7-8 (60с)', 'sos_breathe')
+      .text('⏱️ Волна тяги (3 мин)', 'sos_wave').row()
       .text('🧠 Рациональный ответ', 'sos_rational').row()
       .text('🔑 Переключение фокуса', 'sos_switching').row()
       .text('🎉 Поздравь меня!', 'sos_celebrating').row()
-      .text('🧘 Mindfulness-техника', 'sos_mindfulness').row()
+      .text('🧘 Mindfulness', 'sos_mindfulness')
       .text('🧠 CBT-техника', 'sos_cbt').row()
       .text('🎲 Случайная поддержка', 'sos_random').row()
       .text('✅ Чудовище побеждено!', 'sos_resisted')

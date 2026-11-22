@@ -51,6 +51,16 @@ async function main() {
           { command: 'stats', description: '📸 Моя карточка прогресса' },
           { command: 'settings', description: '⚙️ Настройки профиля' },
         ]);
+        if (config.webAppUrl) {
+          await bot.api.setChatMenuButton({
+            menu_button: {
+              type: 'web_app',
+              text: 'Приложение',
+              web_app: { url: config.webAppUrl },
+            },
+          });
+          console.log(`Telegram Mini App button configured: ${config.webAppUrl}`);
+        }
       } catch (e) {
         console.warn('Could not register bot commands:', e);
       }

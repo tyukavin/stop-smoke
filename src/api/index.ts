@@ -11,6 +11,7 @@ import { contentRoutes } from './routes/content.js';
 import { materialsRoutes } from './routes/materials.js';
 import { stickersRoutes } from './routes/stickers.js';
 import { botConfigRoutes } from './routes/botConfig.js';
+import { webappRoutes } from './routes/webapp.js';
 
 export async function createApi() {
   const app = Fastify({ logger: false });
@@ -35,6 +36,10 @@ export async function createApi() {
     return reply.sendFile('admin.html');
   });
 
+  app.get('/app', async (_req, reply) => {
+    return reply.sendFile('app.html');
+  });
+
   app.get('/api/health', () => ({ status: 'ok', version: '2.0.0' }));
 
   await app.register(authRoutes, { prefix: '/api/auth' });
@@ -44,6 +49,7 @@ export async function createApi() {
   await app.register(materialsRoutes, { prefix: '/api/materials' });
   await app.register(stickersRoutes, { prefix: '/api/stickers' });
   await app.register(botConfigRoutes, { prefix: '/api/bot-config' });
+  await app.register(webappRoutes, { prefix: '/api/webapp' });
 
   return app;
 }

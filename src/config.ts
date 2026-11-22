@@ -7,4 +7,5 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || 'change-me',
   adminIds: (process.env.ADMIN_IDS || '').split(',').filter(Boolean).map(Number),
   botHandle: process.env.BOT_HANDLE || '@QuitSmokeBot',
+  webAppUrl: process.env.WEBAPP_URL || '',
 };

@@ -11,6 +11,7 @@ import { handleSettingsEntry } from './settings.js';
 import { handleHealth } from './health.js';
 import { handleMissionEntry } from './missions.js';
 import { handleAnalytics } from './analytics.js';
+import { config } from '../../config.js';
 import { InlineKeyboard } from 'grammy';
 
 function moreKbFallback() {
@@ -91,6 +92,20 @@ export function mainMenuTextRouter(bot: Bot<BotContext>) {
     await dispatchAction(ctx, action);
     await ctx.answerCallbackQuery();
   };
+
+  bot.command('app', async (ctx) => {
+    if (!config.webAppUrl) {
+      await ctx.reply('📱 Мини-приложение ещё не подключено к HTTPS-домену (`WEBAPP_URL`).', {
+        parse_mode: 'Markdown',
+      });
+      return;
+    }
+    const kb = new InlineKeyboard().webApp('📱 Открыть приложение', config.webAppUrl);
+    await ctx.reply('🔓 <b>Открыть «Лёгкий способ» Mini App</b>\n\nЖивой таймер, дыхание 4-7-8, копилка мечты, курс 14 дней и аналитика триггеров:', {
+      parse_mode: 'HTML',
+      reply_markup: kb,
+    });
+  });
 
   bot.callbackQuery('menu_mission', (ctx) => menuCb(ctx, 'mission'));
   bot.callbackQuery('menu_analytics', (ctx) => menuCb(ctx, 'analytics'));
